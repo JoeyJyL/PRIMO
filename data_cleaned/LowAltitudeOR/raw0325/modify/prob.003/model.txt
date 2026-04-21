@@ -1,0 +1,105 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the Location-Routing Problem (LRP).
+
+Let's denote:
+
+- $ y_k $: a binary variable indicating whether depot $ k $ is open (1) or not (0), for all $ k \in D $.
+- $ x_{ij} $: a binary variable indicating if a UAV traverses the arc from node $ i $ to node $ j $ (1) or not (0), for all $ (i,j) \in A $.
+- $ u_i $: a continuous variable representing the cumulative distance traveled upon arriving at node $ i $, for all $ i \in N $.
+
+Thus, we have:
+
+- $ y_k \in \{0, 1\} $ for all $ k \in D $.
+- $ x_{ij} \in \{0, 1\} $ for all $ (i,j) \in A $.
+- $ u_i \ge 0 $ for all $ i \in N $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total cost, which includes the fixed opening costs for depots and the variable routing costs (distance).
+
+The objective function is:
+
+$$
+\min \sum_{k \in D} F_k y_k + \sum_{(i,j) \in A} c_{ij} x_{ij}
+$$
+
+Where:
+
+- $ F_k $ is the fixed opening cost for depot $ k $.
+- $ c_{ij} $ is the distance from node $ i $ to node $ j $.
+- $ D $ is the set of candidate depots and $ A $ is the set of arcs.
+
+### Step 3: Constraint Construction
+
+1. **Target Coverage Constraint:**
+
+Each target point must be entered and left exactly once.
+
+For each target $ j \in T $:
+
+$$
+\sum_{i \in N} x_{ij} = 1
+$$
+
+For each target $ i \in T $:
+
+$$
+\sum_{j \in N} x_{ij} = 1
+$$
+
+2. **Depot Logic & Flow Conservation Constraint:**
+
+Routes must start and end at the same open depot. If a route leaves depot $ k $, then depot $ k $ must be open.
+
+For each depot $ k \in D $:
+
+$$
+\sum_{j \in T} x_{kj} = \sum_{j \in T} x_{jk}
+$$
+
+$$
+\sum_{j \in T} x_{kj} \le M \cdot y_k
+$$
+
+Where $ M $ is a Big-M parameter.
+
+3. **Subtour Elimination & Connectivity (MTZ) Constraint:**
+
+Ensure valid loops connected to depots and eliminate subtours.
+
+For depot nodes: $ u_k = 0 $ for all $ k \in D $.
+
+For arcs from any node to a target node:
+
+$$
+u_j \ge u_i + c_{ij} - M(1 - x_{ij}) \quad \forall i \in N, j \in T
+$$
+
+4. **Range Constraint:**
+
+The total distance of any route must not exceed the maximum UAV range $ L = 22.0 $ km.
+
+For each target $ i \in T $ and depot $ k \in D $:
+
+$$
+u_i + c_{ik} \le L + M(1 - x_{ik})
+$$
+
+Also:
+
+$$
+u_i \le L \quad \forall i \in T
+$$
+
+5. **No Depot-to-Depot Arcs:**
+
+$$
+\sum_{k_1 \in D} \sum_{k_2 \in D, k_2 \ne k_1} x_{k_1 k_2} = 0
+$$
+
+6. **Binary and Non-negativity Constraints:**
+
+$$
+x_{ij} \in \{0, 1\}, \quad y_k \in \{0, 1\}, \quad u_i \ge 0
+$$

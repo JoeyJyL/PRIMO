@@ -1,0 +1,49 @@
+AeroRelief Emergency Logistics is planning to establish a drone hub network in a disaster-prone region.
+The planning process involves two stages to handle potential disaster uncertainties:
+- **Stage 1 (Strategic):** Decide where to build drone hubs before any disaster occurs. Building a hub incurs a fixed construction cost.
+- **Stage 2 (Operational):** Once a disaster hits and demand is realized, drones deliver supplies from built hubs to demand points. This incurs operational costs based on distance and transport volume.
+
+The goal is to select a subset of candidate hubs to build such that the sum of **Construction Cost** and the **Worst-Case Operational Cost** across possible scenarios is minimized (Min-Max Robust Optimization).
+
+**Candidate Hubs**
+There are 3 candidate locations for hubs. Each has a maximum service radius of **10 km**.
+The unit transportation cost is **$1.0 per unit per km**.
+
+| Hub ID | Construction Cost ($) | Description |
+| :--- | :--- | :--- |
+| H1 | 5,000 | Highland, moderate cost |
+| H2 | 4,000 | Plains, low cost |
+| H3 | 7,000 | City center, high cost |
+
+**Infrastructure Dependency:**
+Hub H2 (Plains) relies on the air traffic coordination infrastructure hosted at Hub H3 (City Center). Therefore, if H2 is built, H3 must also be built. H1 and H3 can operate independently.
+
+**Demand Points and Scenarios**
+There are 4 demand points (C1-C4). The demand volume depends on the disaster scenario.
+Two scenarios are considered:
+1.  **Scenario A (Normal Season):** Low, scattered demand.
+2.  **Scenario B (Severe Flood):** High demand, concentrated in specific areas.
+
+**Distance Matrix (km)**
+*Note: Only valid connections (<= 10km) are listed. "-" indicates out of range.*
+
+| | To C1 | To C2 | To C3 | To C4 |
+| :--- | :--- | :--- | :--- | :--- |
+| **From H1** | 4 | 8 | - | 5 |
+| **From H2** | 6 | 3 | 9 | - |
+| **From H3** | 5 | - | 4 | 2 |
+
+**Scenario Demand Data (Units)**
+
+| Point | Scenario A Demand | Scenario B Demand |
+| :--- | :--- | :--- |
+| C1 | 10 | 50 |
+| C2 | 20 | 20 |
+| C3 | 15 | 80 |
+| C4 | 10 | 10 |
+
+**Constraints & Requirements**
+1.  **Mandatory Coverage:** In any realized scenario, every demand point must be assigned to an **active** (built) hub that is within the 10km service range.
+2.  **Infrastructure Dependency:** If hub H2 is built, hub H3 must also be built.
+3.  **Objective:** Minimize [Total Construction Cost + Max(Scenario A Op Cost, Scenario B Op Cost)].
+    * *Operational Cost = Sum of (Demand * Distance * 1.0)* for the assigned links in that scenario.

@@ -1,0 +1,111 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+Let's denote:
+
+- $ y_m $: a binary variable indicating if Micro-Depot (MD) $ m $ is opened.
+- $ z_{im} $: a binary variable indicating if customer $ i $ is served by a drone from MD $ m $.
+- $ v_i $: a binary variable indicating if customer $ i $ is served directly by the truck.
+- $ x_{ij} $: a binary variable indicating if the truck travels from node $ i $ to node $ j $.
+- $ f_{ij} $: a continuous variable representing the single-commodity flow on arc $ (i, j) $, used for subtour elimination.
+
+Thus, we have:
+
+- $ y_m \in \{0, 1\} $ for all $ m \in M $.
+- $ z_{im} \in \{0, 1\} $ for all $ i \in C, m \in M $.
+- $ v_i \in \{0, 1\} $ for all $ i \in C $.
+- $ x_{ij} \in \{0, 1\} $ for all $ i, j \in N $.
+- $ f_{ij} \ge 0 $ for all $ i, j \in N $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total cost, which consists of the fixed costs for opening Micro-Depots, the drone delivery costs, and the truck transportation costs.
+
+The objective function is:
+
+$$
+\min \sum_{m \in M} F_m y_m + \sum_{i \in C} \sum_{m \in M} c_{im}^{drone} z_{im} + \sum_{i \in N} \sum_{j \in N} c_{ij}^{truck} x_{ij}
+$$
+
+Where:
+
+- $ F_m $ is the fixed cost to open MD $ m $.
+- $ c_{im}^{drone} = 2 \cdot d(i, m) \cdot c_d $ is the drone round-trip cost.
+- $ c_{ij}^{truck} = d(i, j) \cdot c_t $ is the truck travel cost.
+
+### Step 3: Constraint Construction
+
+1. **Service Assignment Constraint:**
+
+Each customer must be served exactly once, either by a drone from an open MD or directly by the truck.
+
+For each customer $ i \in C $:
+
+$$
+\sum_{m \in M} z_{im} + v_i = 1
+$$
+
+2. **MD Availability and Range Constraint:**
+
+For each customer $ i \in C $ and MD $ m \in M $:
+
+$$
+z_{im} \le y_m \quad \text{if } d(i, m) \le R_{max}
+$$
+
+$$
+z_{im} = 0 \quad \text{if } d(i, m) > R_{max}
+$$
+
+3. **Truck Flow Conservation:**
+
+For the CDC (node 0), always visited:
+
+$$
+\sum_{j \in N} x_{0j} = 1, \quad \sum_{j \in N} x_{j0} = 1
+$$
+
+For each MD $ m \in M $:
+
+$$
+\sum_{j \in N} x_{mj} = \sum_{j \in N} x_{jm} = y_m
+$$
+
+For each customer $ i \in C $:
+
+$$
+\sum_{j \in N} x_{ij} = \sum_{j \in N} x_{ji} = v_i
+$$
+
+4. **Subtour Elimination via Single-Commodity Flow (replacing MTZ):**
+
+Flow capacity is bounded by routing decisions:
+
+For all $ (i, j) $ with $ i \neq j $:
+
+$$
+f_{ij} \le (|N| - 1) \cdot x_{ij}
+$$
+
+Flow conservation: each active non-CDC node consumes exactly 1 unit of flow.
+
+For each node $ i \in N \setminus \{CDC\} $:
+
+$$
+\sum_{j \in N} f_{ji} - \sum_{j \in N} f_{ij} = h_i
+$$
+
+Where $ h_i $ is the "visit indicator" of node $ i $: $ h_i = y_m $ for MDs, $ h_i = v_i $ for customers.
+
+The CDC sources flow equal to the total number of active nodes:
+
+$$
+\sum_{j \in N} f_{0j} - \sum_{j \in N} f_{j0} = \sum_{m \in M} y_m + \sum_{i \in C} v_i
+$$
+
+5. **Binary and Non-negativity Constraints:**
+
+$$
+y_m, z_{im}, v_i, x_{ij} \in \{0, 1\}, \quad f_{ij} \ge 0
+$$

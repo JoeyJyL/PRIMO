@@ -1,0 +1,106 @@
+### Step 1: Decision Variables Definition
+
+**Sets:**
+- $I$: Set of OTR (overdose-triggered request) locations
+- $J$: Set of candidate drone base locations
+- $I_j \subseteq I$: OTR locations within coverage radius of base $j$
+- $J_i \subseteq J$: Drone bases that can cover OTR location $i$
+
+**Parameters:**
+- $\lambda_i$: Arrival rate of OTRs at location $i$ (Poisson process)
+- $d_{ij}$: Distance between base $j$ and OTR location $i$
+- $v$: Drone flight speed
+- $E[\xi]$: Expected non-travel service time
+- $E[S_{ij}] = \frac{d_{ij}}{v} + E[\xi]$: Expected service time for OTR at $i$ served by base $j$
+- $p$: Total number of drones available
+- $q$: Maximum number of drone bases to open
+- $M$: Maximum drones per base (= 2)
+- $r$: Drone coverage radius
+
+**Decision Variables:**
+- $x_j \in \{0, 1\}$: Binary, 1 if drone base is opened at location $j$
+- $y_{ij} \in \{0, 1\}$: Binary, 1 if OTR at location $i$ is assigned to base $j$
+- $K_j \in \mathbb{Z}^+$: Number of drones deployed at base $j$ (bounded by $M$)
+- $\gamma_j^{(m)} \in \{0, 1\}$: Binary, 1 if exactly $m$ drones are placed at base $j$
+
+### Step 2: Objective Function Construction
+
+The objective is to minimize the average response time across all OTRs.
+
+**Response Time Components:**
+1. Flight time from base $j$ to OTR location $i$: $\frac{d_{ij}}{v}$
+2. Queueing delay at base $j$ (M/G/K approximation)
+
+**Arrival Rate at Base j:**
+$$\eta_j = \sum_{i \in I_j} \lambda_i \cdot y_{ij}$$
+
+**Expected Service Time at Base j:**
+$$E[S_j] = \frac{\sum_{i \in I_j} \lambda_i \cdot y_{ij} \cdot E[S_{ij}]}{\sum_{i \in I_j} \lambda_i \cdot y_{ij}}$$
+
+**Queueing Delay (M/G/K approximation):**
+For base $j$ with $K_j$ drones:
+$$E[Q_j] \approx \frac{\eta_j^{K_j} \cdot E[S_j^2] \cdot E[S_j]^{K_j-1}}{2(K_j-1)!(K_j - \eta_j E[S_j])^2 \cdot g(K_j, S_j, \eta_j)}$$
+
+**Average Response Time (Objective):**
+$$\min R = \frac{1}{\sum_{l \in I} \lambda_l} \sum_{i \in I} \sum_{j \in J_i} \lambda_i \cdot y_{ij} \cdot \left( E[Q_j] + \frac{d_{ij}}{v} \right)$$
+
+For computational tractability with M = 2, this simplifies to a weighted sum of flight times and linearized queueing delay terms.
+
+### Step 3: Constraint Construction
+
+**1. Assignment Constraint:**
+Each OTR location must be assigned to exactly one drone base:
+$$\sum_{j \in J_i} y_{ij} = 1, \quad \forall i \in I$$
+
+**2. Base Opening Constraint:**
+OTRs can only be assigned to opened bases:
+$$y_{ij} \leq x_j, \quad \forall i \in I, j \in J_i$$
+
+**3. Maximum Bases Constraint:**
+$$\sum_{j \in J} x_j \leq q$$
+
+**4. Drone Deployment Constraint:**
+Drones can only be placed at opened bases:
+$$x_j \leq K_j \leq M \cdot x_j, \quad \forall j \in J$$
+
+**5. Total Drones Constraint:**
+$$\sum_{j \in J} K_j = p$$
+
+**6. Stability Constraint:**
+Ensure queueing system stability at each base:
+$$\sum_{i \in I_j} \lambda_i \cdot y_{ij} \cdot E[S_{ij}] < K_j, \quad \forall j \in J$$
+
+**7. Binary Representation of K:**
+Using $\gamma_j^{(m)}$ to represent exact number of drones:
+$$K_j = \sum_{m=1}^{M} m \cdot \gamma_j^{(m)}, \quad \forall j \in J$$
+$$\sum_{m=1}^{M} \gamma_j^{(m)} \leq 1, \quad \forall j \in J$$
+$$x_j \leq \sum_{m=1}^{M} \gamma_j^{(m)} \leq x_j, \quad \forall j \in J$$
+
+**8. Variable Domains:**
+$$x_j, y_{ij}, \gamma_j^{(m)} \in \{0, 1\}$$
+$$K_j \in \mathbb{Z}^+$$
+
+### Summary of the Mathematical Model
+
+**Decision Variables:**
+- $x_j$: Base opening decisions
+- $y_{ij}$: OTR-to-base assignment decisions
+- $K_j$ (or equivalently $\gamma_j^{(m)}$): Number of drones at each base
+
+**Objective Function:**
+Minimize average response time:
+$$\min \frac{1}{\sum_{l} \lambda_l} \left[ \sum_{i,j} \frac{\lambda_i \cdot d_{ij} \cdot y_{ij}}{v} + \text{Queueing Delay Terms} \right]$$
+
+**Key Constraints:**
+1. Single assignment per OTR
+2. Assignment only to opened bases
+3. Maximum number of bases
+4. Drone deployment bounds
+5. Total drone budget
+6. Queueing stability
+7. Binary representation of drone counts
+
+**Note:** The original nonlinear fractional objective can be reformulated as MILP through linearization techniques (see paper for details).
+
+1. Optimization Problem Classification: MILP (after reformulation from nonlinear fractional integer program)
+2. Problem Scale: Small

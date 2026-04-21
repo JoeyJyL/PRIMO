@@ -1,0 +1,59 @@
+### Step 1: Decision Variables Definition
+
+- $ x_i \in \{0, 1\} $: binary variable indicating if Vertiport $ i $ is opened, for $ i \in V = \{1, 2, 3, 4\} $.
+- $ y_r \in \{0, 1\} $: binary variable indicating if RS route $ r $ is active, for $ r \in R = \{A, B\} $.
+
+**Reformulation note (AND General Constraint + Variable Elimination):** The original formulation uses separate ODM coverage variables $ w_z $ with linking constraints $ w_z \le \sum_{i} Cover_{zi} x_i $. Since each ODM zone is covered by exactly one vertiport, we have $ w_z = x_{v_z} $ at optimality (maximization drives $ w_z $ to 1 whenever the covering vertiport is open). We therefore **eliminate** $ w_z $ and substitute $ x_{v_z} $ directly into the objective. Additionally, for RS routes, the original formulation uses two individual linking constraints per route ($ y_r \le x_i $, $ y_r \le x_j $). We replace these with a single **AND general constraint**: $ y_r = \text{and}(x_i, x_j) $, which enforces the same logical relationship in one constraint.
+
+### Step 2: Objective Function Construction
+
+With ODM coverage variables eliminated:
+- Zone 1 (demand 100) covered by V1: contributes $ 100 \, x_1 $
+- Zone 2 (demand 50) covered by V2: contributes $ 50 \, x_2 $
+- Zone 3 (demand 80) covered by V3: contributes $ 80 \, x_3 $
+- Zone 4 (demand 150) covered by V4: contributes $ 150 \, x_4 $
+
+$$
+\max \sum_{r \in R} D_r^{RS} \, y_r + \sum_{z \in Z} D_z^{ODM} \, x_{v_z}
+$$
+
+Expanded:
+
+$$
+\max \; 500 \, y_A + 300 \, y_B + 100 \, x_1 + 50 \, x_2 + 80 \, x_3 + 150 \, x_4
+$$
+
+### Step 3: Constraint Construction
+
+1. **Budget Constraint:**
+
+$$
+\sum_{i \in V} C_i \, x_i \le B
+$$
+
+$$
+10 \, x_1 + 12 \, x_2 + 8 \, x_3 + 6 \, x_4 \le 30
+$$
+
+2. **AND General Constraint (replaces individual RS linking):**
+
+For each RS route $ r $ connecting vertiports $ i $ and $ j $:
+
+$$
+y_r = \text{and}(x_i, x_j)
+$$
+
+Specifically:
+* Route A (V1 ↔ V2): $ y_A = \text{and}(x_1, x_2) $
+* Route B (V1 ↔ V3): $ y_B = \text{and}(x_1, x_3) $
+
+Each AND constraint replaces the two individual linking constraints $ y_r \le x_i $ and $ y_r \le x_j $.
+
+3. **Binary Constraints:**
+
+$$
+x_i \in \{0, 1\}, \quad \forall \, i \in \{1,2,3,4\}
+$$
+$$
+y_r \in \{0, 1\}, \quad \forall \, r \in \{A, B\}
+$$

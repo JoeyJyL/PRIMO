@@ -1,0 +1,126 @@
+### Step 1: Decision Variables Definition
+
+Let’s define the decision variables for the problem.
+
+Let’s denote:
+
+- $ y_{ij} $: a binary variable indicating if edge $ (i,j) $ is opened.
+- $ x_{ijk} $: a continuous variable representing the flow on edge $ (i,j) $ destined for node $ k $.
+
+Thus, we have:
+
+- $ y_{ij} \in \{0, 1\} $ for all $ (i,j) \in E $.
+- $ x_{ijk} \ge 0 $ for all $ (i,j) \in E $ and $ k \in D $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the weighted cost, which consists of the fixed costs for opening edges (based on distance) and the variable operational costs related to the flow distance.
+
+The objective function is:
+
+$$
+\min Z = \sum_{(i,j) \in E} d_{ij} y_{ij} + \alpha \sum_{k \in D} \sum_{(i,j) \in E} d_{ij} x_{ijk}
+$$
+
+Where:
+
+- $ d_{ij} $ is the distance (cost) of edge $ (i,j) $.
+- $ \alpha $ is the weight for operational cost (given as 0.01).
+- $ E $ is the set of candidate edges and $ D $ is the set of demand nodes.
+
+### Step 3: Constraint Construction
+
+Now, let’s identify and translate the constraints into mathematical expressions.
+
+1. **Topology Constraint:**
+
+Flow can only exist on an edge if that edge is opened.
+
+For each edge $ (i,j) \in E $:
+
+$$
+\sum_{k \in D} x_{ijk} \le M y_{ij}
+$$
+
+Where:
+
+- $ M $ is a large constant (Big-M parameter).
+
+2. **Flow Conservation Constraint:**
+
+Standard network flow balance must be maintained for each demand $ k $ at every node $ i $.
+
+For each node $ i \in N $ and demand node $ k \in D $:
+
+$$
+\sum_{j:(i,j) \in E} x_{ijk} - \sum_{j:(j,i) \in E} x_{jik} = 
+\begin{cases} 
+Dem_k & \text{if } i = S \\
+-Dem_k & \text{if } i = k \\
+0 & \text{otherwise}
+\end{cases}
+$$
+
+Where:
+
+- $ Dem_k $ is the demand of node $ k $.
+- $ S $ is the supply (source) node.
+
+3. **Binary and Non-negativity Constraints:**
+
+The decision variables must adhere to their respective domains.
+
+For all $ (i,j) \in E $ and $ k \in D $:
+
+$$
+y_{ij} \in \{0, 1\}, \quad x_{ijk} \ge 0
+$$
+
+### Summary of the Mathematical Model
+
+The mathematical model for the problem is as follows:
+
+**Decision Variables:**
+
+- $ y_{ij} \in \{0, 1\} $ for all $ (i,j) \in E $.
+- $ x_{ijk} \ge 0 $ for all $ (i,j) \in E, k \in D $.
+
+**Objective Function:**
+
+Minimize:
+
+$$
+\min Z = \sum_{(i,j) \in E} d_{ij} y_{ij} + \alpha \sum_{k \in D} \sum_{(i,j) \in E} d_{ij} x_{ijk}
+$$
+
+**Constraints:**
+
+1. **Topology Constraint:**
+
+For each $ (i,j) \in E $:
+
+$$
+\sum_{k \in D} x_{ijk} \le M y_{ij}
+$$
+
+2. **Flow Conservation Constraint:**
+
+For each $ i \in N, k \in D $:
+
+$$
+\sum_{j} x_{ijk} - \sum_{j} x_{jik} = 
+\begin{cases} 
+Dem_k & \text{if } i = S \\
+-Dem_k & \text{if } i = k \\
+0 & \text{otherwise}
+\end{cases}
+$$
+
+3. **Binary and Non-negativity Constraints:**
+
+$$
+y_{ij} \in \{0, 1\}, \quad x_{ijk} \ge 0
+$$
+
+1. Optimization Problem Classification: MILP
+2. Problem Scale: Small

@@ -1,0 +1,140 @@
+## Sets and Indices
+
+- $V = \{0, 1, 2, 3, 4\}$: all nodes ($0$ = start depot, $4$ = end depot)
+- $V^k = \{0, 1, 2, 4\}$: truck-reachable nodes
+- $V^d = \{0, 1, 2, 3, 4\}$: drone-reachable nodes
+- $K = \{1\}$: trucks, $D = \{1\}$: drones
+- $\mathcal{M} = \{1, 2\}$: task types (1 = delivery, 2 = surveillance)
+
+## Parameters
+
+- $t^K_{ij}$: nominal truck travel time on $(i,j)$
+- $t^D_{ij}$: nominal drone travel time on $(i,j)$
+- $\hat{t}^K_{ij} = 0.3 \cdot t^K_{ij}$, $\hat{t}^D_{ij} = 0.3 \cdot t^D_{ij}$: max deviations
+- $\Gamma^K = 1$, $\Gamma^D = 1$: uncertainty budgets
+- $p_{im}$: priority of task $m$ at node $i$
+- $d^w_{im}$: weight demand, $d^t_{im}$: time demand
+- $L^K = 100$ kg, $L^D = 10$ kg, $T^D = 0.5$ h, $B = 1000$
+
+## Decision Variables
+
+- $x_{ijk} \in \{0,1\}$: truck $k$ traverses arc $(i,j)$
+- $y_{ijd} \in \{0,1\}$: drone $d$ traverses arc $(i,j)$
+- $c_{idm} \in \{0,1\}$: drone $d$ serves task $m$ at node $i$
+- $g_{im} \in \{0,1\}$: task $m$ at node $i$ is unserved
+- $t^{a,K}_{ik}, t^{d,K}_{ik} \geq 0$: truck arrival/departure times
+- $t^{a,D}_{id}, t^{d,D}_{id} \geq 0$: drone arrival/departure times
+- $t_{im} \geq 0$: service start time of task $m$ at node $i$
+- $w^D_{id} \geq 0$: drone cumulative weight
+- $v_{id} \geq 0$: drone cumulative flight time
+
+## Objective
+
+$$\min \sum_{(i,m)} p_{im} \cdot t_{im} + B \sum_{(i,m)} p_{im} \cdot g_{im}$$
+
+## Constraints
+
+### (C1) Truck Flow Conservation
+
+$$\sum_{j \in V^k} x_{o_s,j,k} = \sum_{i \in V^k} x_{i,o_e,k} = 1, \quad \forall k$$
+$$\sum_{i} x_{ijk} = \sum_{i} x_{jik}, \quad \forall j \in V^k \setminus \{o_s, o_e\}, k$$
+
+### (C2) Drone Flow Conservation
+
+$$\sum_{j \in V^d} y_{o_s,j,d} = \sum_{i \in V^d} y_{i,o_e,d} = 1, \quad \forall d$$
+$$\sum_{i} y_{ijd} = \sum_{i} y_{jid}, \quad \forall j \in V^d \setminus \{o_s, o_e\}, d$$
+
+### (C3) Task Coverage
+
+$$\sum_k \sum_i x_{ijk} + \sum_d c_{jdm} + g_{jm} = 1, \quad \forall j \in V^k_{\text{cust}}, m$$
+$$\sum_d c_{idm} + g_{im} = 1, \quad \forall i \in V^d \setminus V^k, m$$
+
+### (C4) Drone Capacity
+
+$$w^D_{id} \leq L^D \sum_j y_{jid}, \quad w^D_{id} \geq \sum_m d^w_{im} c_{idm}$$
+
+### (C5) Drone Flight Duration (Robust, with max uncertain travel time)
+
+$$v_{jd} \geq \sum_i (t^D_{ij} + \hat{t}^D_{ij}) y_{ijd} + \sum_m d^t_{jm} c_{jdm} - \bar{t} \cdot \mathbb{1}[\text{truck visits } j]$$
+$$v_{jd} \leq T^D \sum_i y_{ijd}$$
+
+### (C6) Drone Flight Duration Propagation — Indicator Constraint Formulation
+
+The original Big-M formulation for drone flight propagation was:
+
+$$v_{jd} \geq v_{id} + (t^D_{ij}+\hat{t}^D_{ij}) y_{ijd} + \sum_m d^t_{jm} c_{jdm} + \bar{t}(y_{ijd}-1) - \bar{t} \cdot \mathbb{1}[\text{truck departs } i]$$
+
+This is replaced by an **indicator constraint** that activates only when drone $d$ actually flies arc $(i,j)$:
+
+$$y_{ijd} = 1 \;\Rightarrow\; v_{jd} \geq v_{id} + (t^D_{ij}+\hat{t}^D_{ij}) + \sum_m d^t_{jm} c_{jdm} - \bar{t} \cdot \mathbb{1}[\text{truck departs } i]$$
+
+### (C7) Truck Time Propagation — Indicator Constraint Formulation
+
+The original Big-M formulation was:
+
+$$t^{a,K}_j \geq t^{d,K}_i + t^K_{ij} x_{ijk} + \bar{t}(x_{ijk}-1)$$
+
+This is replaced by an **indicator constraint**:
+
+$$x_{ijk} = 1 \;\Rightarrow\; t^{a,K}_j \geq t^{d,K}_i + t^K_{ij}$$
+
+### (C8) Drone Time Propagation — Indicator Constraint Formulation
+
+The original Big-M formulation was:
+
+$$t^{a,D}_j \geq t^{d,D}_i + t^D_{ij} y_{ijd} + \bar{t}(y_{ijd}-1)$$
+
+This is replaced by:
+
+$$y_{ijd} = 1 \;\Rightarrow\; t^{a,D}_j \geq t^{d,D}_i + t^D_{ij}$$
+
+### (C9) Truck Departure $\geq$ Arrival
+
+$$t^{d,K}_{ik} \geq t^{a,K}_{ik}, \quad \forall i \in V^k, k$$
+
+### (C10) Drone Departure (after task service)
+
+$$t^{d,D}_{jd} \geq t^{a,D}_{jd} + \sum_m d^t_{jm} c_{jdm}$$
+
+### (C11) Time Synchronization (drone-truck co-location)
+
+Drone departure/arrival at truck-reachable node $i$ must occur while a truck is present. The Big-M form is retained here because two binary conditions are involved:
+
+$$t^{d,D}_{id} \geq t^{a,K}_{ik} + \bar{t}(\sum_j y_{ijd} + \sum_{l,k} x_{lik} - 2)$$
+$$t^{d,D}_{id} \leq t^{d,K}_{ik} - \bar{t}(\sum_j y_{ijd} + \sum_{l,k} x_{lik} - 2)$$
+
+(Similarly for drone arrival synchronization.)
+
+### (C12) Service Start Time — Indicator Constraint Formulation
+
+Original:
+$$t_{im} \geq t^{a,D}_{id} + \bar{t}(c_{idm} - 1)$$
+
+Replaced by:
+$$c_{idm} = 1 \;\Rightarrow\; t_{im} \geq t^{a,D}_{id}$$
+
+For truck-served tasks:
+$$t_{im} \geq t^{a,K}_{ik}, \quad \forall i \in V^k_{\text{cust}}$$
+
+### (C13) Initial Conditions
+
+$$t^{a,K}_{o_s,k} = t^{d,K}_{o_s,k} = t^{a,D}_{o_s,d} = t^{d,D}_{o_s,d} = 0$$
+
+### (C14) Visit Once, No End-Depot Departure
+
+$$\sum_i x_{ijk} \leq 1, \quad \sum_i y_{ijd} \leq 1, \quad \forall j$$
+$$c_{jdm} \leq \sum_i y_{ijd}, \quad \forall j, d, m$$
+
+## Key Modeling Difference
+
+This formulation replaces the **Big-M linearization** for conditional time-propagation constraints with **indicator constraints**. Specifically:
+
+- **Truck time propagation (C7)**: $x_{ijk}=1 \Rightarrow t^{a,K}_j \geq t^{d,K}_i + t^K_{ij}$
+- **Drone time propagation (C8)**: $y_{ijd}=1 \Rightarrow t^{a,D}_j \geq t^{d,D}_i + t^D_{ij}$
+- **Drone flight propagation (C6)**: $y_{ijd}=1 \Rightarrow v_{jd} \geq v_{id} + ...$
+- **Service start time (C12)**: $c_{idm}=1 \Rightarrow t_{im} \geq t^{a,D}_{id}$
+
+Indicator constraints eliminate the need for the Big-M constant $\bar{t}$ in these constraints, producing tighter LP relaxations and avoiding numerical instabilities. Time synchronization constraints (C11) retain Big-M because they involve conjunctions of multiple binary variables.
+
+1. Optimization Problem Classification: MILP
+2. Problem Size: Small

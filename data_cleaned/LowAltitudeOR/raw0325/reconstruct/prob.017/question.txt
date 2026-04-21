@@ -1,0 +1,32 @@
+BayCity Transport Authority is planning a UAM network to connect its mainland districts with offshore islands.
+**Goal:** Select Vertiport locations to maximize the total daily passenger coverage under a budget constraint.
+**Service Types:**
+1. **Regular Shuttle (RS):** Fixed high-speed routes across the bay. An RS route is active ONLY if **BOTH** endpoints have an open Vertiport.
+2. **On-Demand Mobility (ODM):** Flexible intra-city hops. An ODM demand zone is covered if **AT LEAST ONE** Vertiport is opened within its vicinity.
+
+**Parameters:**
+- **Total Budget:** $30 Million.
+- **Construction Costs:** Vary by location.
+
+**Candidate Vertiports:**
+- **V1 (Downtown):** Cost $10M. Central hub.
+- **V2 (Island Resort):** Cost $12M. Key tourist spot.
+- **V3 (Tech Port):** Cost $8M. Industrial zone.
+- **V4 (Suburbs):** Cost $6M. Residential area.
+
+**Demand Data:**
+*RS Routes (Requires Both Ends Open):*
+- **Route A (Downtown <-> Island):** Demand 500 pax/day. (Requires V1 & V2)
+- **Route B (Downtown <-> Tech):** Demand 300 pax/day. (Requires V1 & V3)
+
+*ODM Zones (Requires One Nearby Open):*
+- **Zone 1 (Downtown Core):** Demand 100. Covered by V1.
+- **Zone 2 (Island Local):** Demand 50. Covered by V2.
+- **Zone 3 (Tech Hub):** Demand 80. Covered by V3.
+- **Zone 4 (Suburb Area):** Demand 150. Covered by V4.
+
+**Analysis:**
+- **Option 1 (V1 + V2):** Cost 22M. RS: Route A (500). ODM: Z1(100)+Z2(50). Total = 650.
+- **Option 2 (V1 + V3 + V4):** Cost 10+8+6 = 24M. RS: Route B (300). ODM: Z1(100)+Z3(80)+Z4(150). Total = 630.
+- **Option 3 (V1 + V2 + V4):** Cost 10+12+6 = 28M. RS: Route A (500). ODM: Z1+Z2+Z4 (100+50+150). Total = 800.
+- **Option 4 (All):** Cost 36M (Over budget).

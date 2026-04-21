@@ -1,0 +1,63 @@
+A logistics company operates a delivery system using a truck and multiple drones for package delivery. The truck acts as a mobile depot and battery recharging station for the drones. Drones can launch from the truck carrying one or more packages, deliver them to customers, and return to the truck to recharge and pick up more packages.
+
+**Business Context:**
+The company needs to minimize the total route completion time (when all packages are delivered and the truck and drones return to the warehouse). Each drone has limited battery capacity that depends on the weight of packages carried. The truck travels on roads between designated launch/landing locations, while drones fly directly to customer locations.
+
+**Decision Problem:**
+Determine the optimal sequence of operations where:
+1. The truck moves between launch/landing locations
+2. Drones launch from the truck, visit customers, and return to the truck
+3. All packages are delivered with minimum total time
+
+**Operational Constraints:**
+1. **Drone Battery:** Each drone has limited energy capacity (EMAX). Due to repeated use in cold weather conditions causing accelerated battery degradation, the effective battery capacity has been reduced from 540 J to EMAX = 400 J. Energy consumption depends on package weight carried.
+2. **Multi-Package Delivery:** A drone can carry multiple packages in a single flight (subject to energy constraints)
+3. **Launch/Landing Locations:** Drones can only launch/land at designated locations (not all customer locations)
+4. **Operation Structure:** All drone launches occur at one location, truck drives to retrieval location, all drones land there
+5. **Heterogeneous Packages:** Packages have different weights affecting drone energy consumption
+
+**Simplified Scenario Data:**
+
+*Warehouse (Origin/Destination):*
+- Depot: Location (0, 0)
+
+*Launch/Landing Locations (3 locations):*
+- V1: Location (0, 0) - Depot
+- V2: Location (10, 5)
+- V3: Location (15, 10)
+
+*Customer Locations (5 customers):*
+- C1: Location (8, 3), Package Weight: 0.5 kg
+- C2: Location (12, 7), Package Weight: 1.0 kg
+- C3: Location (18, 12), Package Weight: 0.8 kg
+- C4: Location (6, 8), Package Weight: 1.2 kg
+- C5: Location (14, 4), Package Weight: 0.6 kg
+
+*Vehicle Parameters:*
+- Number of drones (k): 2
+- Truck speed: 5 m/s
+- Drone speed: 10 m/s
+- Drone battery capacity (EMAX): 400 Joules (reduced from 540 due to cold-weather battery degradation)
+- Launch penalty: 30 seconds (overhead time for launching drones)
+
+*Energy Consumption Function:*
+For a drone carrying weight W kg, energy consumption per meter is:
+- e(W) = 31.0 + 5.6 * W Joules/meter (simplified linear approximation)
+- Hovering energy rate (HOV): 31.0 Joules/second (when waiting for truck)
+
+*Distance Calculations:*
+- Truck travel time between locations: Euclidean distance / 5 m/s
+- Drone travel time: Euclidean distance / 10 m/s
+
+**Energy Feasibility:**
+A drone flight is energy feasible if total energy consumed ≤ EMAX:
+- Energy = Σ(distance × energy_rate_for_current_weight) + hovering_energy
+- Energy rate increases with package weight
+- After delivering a package, weight decreases for remaining flight
+
+**Objective:**
+Minimize the total route completion time (sum of all operation times) such that:
+- All packages are delivered to customers
+- All drones return to the depot
+- The truck returns to the depot
+- All drone flights are energy feasible

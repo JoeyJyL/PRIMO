@@ -1,0 +1,222 @@
+<think>
+Identifying the decision variables, objective functions, and constraints for the multi-objective vertiport location optimization problem based on the middle-mile package delivery framework.
+
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+Let's denote:
+
+- $ x_{kt} $: a binary variable indicating whether a vertiport of type $ t $ is placed in zone $ k $ (1) or not (0).
+- $ y_c $: a binary variable indicating whether customer zone $ c $ is covered (1) or not (0).
+- $ r_{wck} $: a continuous variable representing the fraction of demand from warehouse $ w $ to customer $ c $ routed through vertiport in zone $ k $.
+
+Thus, we have:
+
+- $ x_{kt} \in \{0, 1\} $ for all $ k \in K, t \in T $.
+- $ y_c \in \{0, 1\} $ for all $ c \in C $.
+- $ 0 \le r_{wck} \le 1 $ for all $ w \in W, c \in C, k \in K $.
+
+### Step 2: Objective Functions Construction
+
+The problem has three objectives that need to be optimized simultaneously.
+
+**Objective 1: Minimize Unserved Demand**
+
+$$
+\text{Minimize } f_1 = \sum_{c \in C} w_c (1 - y_c)
+$$
+
+Where:
+- $ C $ is the set of customer zones.
+- $ w_c $ is the demand weight (packages) of customer zone $ c $.
+- $ y_c $ indicates if customer $ c $ is covered.
+
+**Objective 2: Minimize Total Safety Risk**
+
+$$
+\text{Minimize } f_2 = \sum_{k \in K} \sum_{t \in T} S_k \cdot x_{kt}
+$$
+
+Where:
+- $ K $ is the set of candidate vertiport zones.
+- $ T $ is the set of vertiport types.
+- $ S_k $ is the safety score of zone $ k $ (higher = worse).
+
+**Objective 3: Minimize Total Noise Nuisance**
+
+$$
+\text{Minimize } f_3 = \sum_{k \in K} \sum_{t \in T} N_k \cdot x_{kt}
+$$
+
+Where:
+- $ N_k $ is the noise score of zone $ k $ (higher = worse).
+
+### Step 3: Constraint Construction
+
+Now, let's identify and translate the constraints into mathematical expressions.
+
+1. **Vertiport Budget Constraint:**
+
+Exactly $ p $ vertiports must be selected:
+
+$$
+\sum_{k \in K} \sum_{t \in T} x_{kt} = p
+$$
+
+Where:
+- $ p = 3 $ is the number of vertiports to locate.
+
+2. **Single Type per Zone:**
+
+At most one vertiport type can be placed in each zone:
+
+$$
+\sum_{t \in T} x_{kt} \le 1, \quad \forall k \in K
+$$
+
+3. **Coverage Definition:**
+
+A customer $ c $ is covered only if at least one vertiport within range serves it:
+
+$$
+y_c \le \sum_{k \in K} \sum_{t \in T} x_{kt} \cdot v_{wck}, \quad \forall c \in C, w \in W
+$$
+
+Where:
+- $ v_{wck} = 1 $ if $ dist(w, k) \le f_p $ and $ dist(k, c) \le f_d $, otherwise $ v_{wck} = 0 $.
+- $ f_p = 30 $ km is the maximum drone range.
+- $ f_d = 10 $ km is the maximum last-mile distance.
+
+4. **Demand Allocation:**
+
+Demand can only be routed through selected vertiports within range:
+
+$$
+r_{wck} \le \sum_{t \in T} x_{kt} \cdot v_{wck}, \quad \forall w \in W, c \in C, k \in K
+$$
+
+5. **Coverage Requirement:**
+
+Customer is covered if the total allocated fraction equals 1:
+
+$$
+\sum_{k \in K} r_{wck} = y_c, \quad \forall w \in W, c \in C
+$$
+
+6. **Capacity Constraint:**
+
+Total demand routed through a vertiport cannot exceed its capacity:
+
+$$
+\sum_{w \in W} \sum_{c \in C} w_c \cdot r_{wck} \le \sum_{t \in T} \Gamma_t \cdot x_{kt}, \quad \forall k \in K
+$$
+
+Where:
+- $ \Gamma_t $ is the capacity (packages/day) for vertiport type $ t $.
+
+7. **Minimum Safety Distance:**
+
+Selected vertiports must be at least $ d_{min} $ apart:
+
+$$
+x_{kt} + x_{k't'} \le 1, \quad \forall k, k' \in K: k \ne k', dist(k, k') < d_{min}, \forall t, t' \in T
+$$
+
+Where:
+- $ d_{min} = 2 $ km is the minimum safety distance.
+
+8. **Maximum Safety Distance:**
+
+Each selected vertiport must have at least one other vertiport within $ d_{max} $:
+
+$$
+\sum_{k' \in K: k' \ne k, dist(k,k') \le d_{max}} \sum_{t' \in T} x_{k't'} \ge \sum_{t \in T} x_{kt}, \quad \forall k \in K
+$$
+
+Where:
+- $ d_{max} = 10 $ km is the maximum safety distance.
+
+### Summary of the Mathematical Model
+
+The mathematical model for the multi-objective vertiport location problem is as follows:
+
+**Decision Variables:**
+
+- $ x_{kt} \in \{0, 1\} $ for all $ k \in K, t \in T $.
+- $ y_c \in \{0, 1\} $ for all $ c \in C $.
+- $ 0 \le r_{wck} \le 1 $ for all $ w \in W, c \in C, k \in K $.
+
+**Objective Functions:**
+
+Minimize unserved demand:
+
+$$
+f_1 = \sum_{c \in C} w_c (1 - y_c)
+$$
+
+Minimize total safety risk:
+
+$$
+f_2 = \sum_{k \in K} \sum_{t \in T} S_k \cdot x_{kt}
+$$
+
+Minimize total noise nuisance:
+
+$$
+f_3 = \sum_{k \in K} \sum_{t \in T} N_k \cdot x_{kt}
+$$
+
+**Constraints:**
+
+1. **Vertiport Budget:**
+
+$$
+\sum_{k \in K} \sum_{t \in T} x_{kt} = p
+$$
+
+2. **Single Type per Zone:**
+
+$$
+\sum_{t \in T} x_{kt} \le 1, \quad \forall k \in K
+$$
+
+3. **Coverage Definition:**
+
+$$
+y_c \le \sum_{k \in K} \sum_{t \in T} x_{kt} \cdot v_{wck}, \quad \forall c \in C, w \in W
+$$
+
+4. **Demand Allocation:**
+
+$$
+r_{wck} \le \sum_{t \in T} x_{kt} \cdot v_{wck}, \quad \forall w \in W, c \in C, k \in K
+$$
+
+5. **Coverage Requirement:**
+
+$$
+\sum_{k \in K} r_{wck} = y_c, \quad \forall w \in W, c \in C
+$$
+
+6. **Capacity Constraint:**
+
+$$
+\sum_{w \in W} \sum_{c \in C} w_c \cdot r_{wck} \le \sum_{t \in T} \Gamma_t \cdot x_{kt}, \quad \forall k \in K
+$$
+
+7. **Minimum Safety Distance:**
+
+$$
+x_{kt} + x_{k't'} \le 1, \quad \forall k, k' \in K: k \ne k', dist(k, k') < d_{min}, \forall t, t' \in T
+$$
+
+8. **Maximum Safety Distance:**
+
+$$
+\sum_{k' \in K: k' \ne k, dist(k,k') \le d_{max}} \sum_{t' \in T} x_{k't'} \ge \sum_{t \in T} x_{kt}, \quad \forall k \in K
+$$
+</think>
+
+1. Optimization Problem Classification: MILP
+2. Problem Size: Small

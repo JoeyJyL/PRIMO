@@ -1,0 +1,144 @@
+### Step 1: Sets and Parameters
+
+**Sets:**
+
+- $ K $: set of vehicle concepts, $ k \in K = \{0, 1\} $ (TiltWing, LiftCruise).
+- $ R $: set of recharging infrastructure concepts, $ r \in R = \{0, 1, 2\} $ (50kW, 150kW, 350kW).
+- $ S $: set of trip sequences (one per vehicle), $ s \in S $.
+- $ N_s $: set of trip labels belonging to sequence $ s $, $ i \in N_s $.
+- $ A_s $: set of consecutive trip pairs $ (i, j) $ within sequence $ s $.
+
+**Parameters (see detailed tables in question.txt):**
+
+- $ m_k^{EW} $: empty weight of vehicle type $ k $ (kg).
+- $ e_k^{acc}, e_k^{dec} $: hover power gradient (kW/kg) for vehicle $ k $.
+- $ e_k^{cruise} $: cruise energy gradient (kWh/km/kg) for vehicle $ k $.
+- $ m_p $: average passenger weight (kg).
+- $ t^{acc}, t^{dec} $: fixed take-off/landing time (hours).
+- $ v_{cruise} $: cruise speed (kph).
+- $ t_m $: turnaround/maintenance time (hours).
+- $ l_i $: horizontal trip distance of trip $ i $ (km).
+- $ \bar{n}_i $: number of passengers on trip $ i $.
+- $ d_{ij} $: deadheading distance between trip $ i $ and $ j $ (km).
+- $ \delta_{ij} \in \{0,1\} $: 1 if deadheading flight occurs between $ i $ and $ j $.
+- $ \tau_{ij} $: time gap between end of trip $ i $ and start of trip $ j $ (hours).
+- $ s_r $: charging speed of infrastructure type $ r $ (kW).
+- $ c_b, c_e $: battery cost (USD/kWh), energy cost (USD/kWh).
+- $ n_V $: number of vehicles; $ n_{VP} $: number of stations; $ n_{PS} $: parking slots per station.
+- $ \sigma $: annual operating days; $ a_k^{eVTOL} $: vehicle lifetime (years); $ \xi_k $: residual value fraction.
+- $ \eta^{man}_k $: anti-collision maneuver factor.
+- $ \rho^{energy} $: battery energy density (kWh/kg); $ \rho^{power} $: battery power density (kW/kg); $ \mu $: usable fraction.
+
+### Step 2: Decision Variables
+
+- $ Q_w \in \mathbb{N} $: battery weight of each vehicle (kg).
+- $ k \in K $: selected vehicle concept (modeled via binary $ y_k $).
+- $ r \in R $: selected charging infrastructure (modeled via binary $ y_r $).
+- $ q_i \geq 0 $: battery state of charge before operating trip $ i $ (kWh).
+- $ w_i \geq 0 $: energy recharged before operating trip $ i $ (kWh).
+- $ u_i \geq 0 $: additional energy recharged after trip $ i $ before a deadheading flight (kWh).
+
+Binary selection variables:
+
+$$
+\sum_{k \in K} y_k = 1, \quad \sum_{r \in R} y_r = 1
+$$
+
+### Step 3: Objective Function
+
+Minimize daily Total Cost of Ownership:
+
+$$
+\min \; Z = \text{fleet} + \text{infra} + \text{oper.tr} + \text{oper.dh}
+$$
+
+**Fleet costs (Eq. 2):**
+
+$$
+\text{fleet} = \frac{n_V \cdot c_k^{EW} \cdot (1 - \xi_k)}{a_k^{eVTOL} \cdot \sigma} + \frac{c_b}{n^{RC,bat}} \sum_{s \in S} \sum_{i \in N_s} (w_i + u_i) + \frac{n_V \cdot c_k^{m}}{\sigma}
+$$
+
+where $ c_k^{EW} = m_k^{EW} \times 770 $ USD.
+
+**Infrastructure costs (Eq. 3):**
+
+$$
+\text{infra} = \frac{n_{VP} \cdot n_{PS} \cdot (c_r^{hw} + c_r^{ins})}{a_r^{VP} \cdot \sigma}
+$$
+
+**Operating costs — passenger trips (Eq. 4):**
+
+$$
+\text{oper.tr} = c_e \sum_{s \in S} \sum_{i \in N_s} \eta^{man}_k \left[ e_k^{acc}(m_k^{EW} + Q_w + m_p \bar{n}_i) t^{acc} + e_k^{cruise}(m_k^{EW} + Q_w + m_p \bar{n}_i) l_i + e_k^{dec}(m_k^{EW} + Q_w + m_p \bar{n}_i) t^{dec} \right]
+$$
+
+**Operating costs — deadheading flights (Eq. 5):**
+
+$$
+\text{oper.dh} = c_e \sum_{s \in S} \sum_{(i,j) \in A_s} \delta_{ij} \cdot \eta^{man}_k \left[ e_k^{acc}(m_k^{EW} + Q_w) t^{acc} + e_k^{cruise}(m_k^{EW} + Q_w) d_{ij} + e_k^{dec}(m_k^{EW} + Q_w) t^{dec} \right]
+$$
+
+### Step 4: Constraints
+
+**(6) Max battery SOC before each trip:**
+
+$$
+q_i + w_i \leq \mu \cdot Q_w \cdot \rho^{energy} \quad \forall s \in S, \; i \in N_s
+$$
+
+**(7) Max SOC including deadheading energy does not exceed capacity** (implicit in linkage).
+
+**(8) Recharge limit before trip $ j $:**
+
+$$
+0 \leq w_j \leq s_r \cdot \left[ \delta_{ij} \cdot t_m + (1 - \delta_{ij}) \cdot \tau_{ij} \right] \quad \forall s \in S, \; (i,j) \in A_s
+$$
+
+**(9) Recharge limit before deadheading:**
+
+$$
+0 \leq u_i \leq s_r \cdot \delta_{ij} \left( \tau_{ij} - t_m - t^{acc} - t^{dec} - \frac{d_{ij}}{v_{cruise}} \right) \quad \forall s \in S, \; (i,j) \in A_s
+$$
+
+**(10) SOC linkage between consecutive trips:**
+
+$$
+q_j \leq q_i + w_i - E_i^{trip} + \delta_{ij}(u_i - E_{ij}^{dh}) \quad \forall s \in S, \; (i,j) \in A_s
+$$
+
+where $ E_i^{trip} $ and $ E_{ij}^{dh} $ are the energy consumption of trip $ i $ and deadheading flight $ (i,j) $ respectively.
+
+**(11) Minimum energy for each trip:**
+
+$$
+q_i + w_i \geq E_i^{trip} \quad \forall s \in S, \; i \in N_s
+$$
+
+**(12) Minimum battery power:**
+
+$$
+Q_k^{p,min} \leq Q_w \cdot \rho^{power} \quad \forall k \in K
+$$
+
+**(13) Maximum take-off weight:**
+
+$$
+m_k^{EW} + Q_w + m_p \cdot n^{PAX,MATSim} \leq m_k^{max} \quad \forall k \in K
+$$
+
+**(14) Passenger capacity:** $ n^{PAX,MATSim} \leq n_k^{PAX} $
+
+**(15) Speed constraint:** $ v_{cruise} \leq v_k^{max} $
+
+**(16) Integer battery weight:** $ Q_w \in \mathbb{N} $
+
+### Summary
+
+**Decision Variables:** $ Q_w $ (integer), $ y_k $ (binary, 2 vars), $ y_r $ (binary, 3 vars), $ q_i, w_i, u_i $ (continuous, 18 vars). Total: ~23 decision variables + auxiliaries.
+
+**Constraints:** 6 SOC upper bounds, 6 min energy, 4 SOC linkages, 4 recharge limits, 4 u-limits, 2 init conditions, feasibility constraints, selection constraints. Total: ~30+ constraints.
+
+**Objective:** Minimize daily TCO (linear in decision variables given fixed k, r; bilinear terms linearized via indicator constraints).
+
+Classification: MILP
+Scale: Small

@@ -1,0 +1,149 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+We introduce **auxiliary variables** that decompose the model into zone-level workload contributions and per-pair net contribution components:
+
+- $ a_{ij} \geq 0 $: drone delivery offer rate (accepted orders) for category $ j $ in zone $ i $.
+- $ u_{ij} \geq 0 $: unfulfilled demand for category $ j $ in zone $ i $.
+- $ g_{ij} $: auxiliary variable representing the **net contribution** (revenue minus opportunity cost) from the $ (i,j) $ pair.
+- $ WL_i \geq 0 $: auxiliary variable representing the **normalized workload contribution** from zone $ i $.
+- $ L \geq 0 $: auxiliary variable representing the **total normalized workload** across all zones.
+- $ W \geq 0 $: excess workload beyond fleet capacity (triggers delay costs).
+
+### Step 2: Objective Function Construction
+
+By aggregating the net contribution through the auxiliary $ g_{ij} $ variables, the objective becomes:
+
+$$
+\text{Maximize } Z = \sum_{i \in N} \sum_{j \in M} g_{ij} - c_w \cdot W - K \cdot c_F
+$$
+
+Where:
+
+- $ g_{ij} $ encapsulates the revenue-minus-opportunity-cost for each zone-category pair.
+- $ c_w = 100.00 $ is the delivery delay cost per excess workload unit.
+- $ K = 8 $, $ c_F = 0.50 $.
+
+### Step 3: Constraint Construction
+
+1. **Net Contribution Definition (Auxiliary Linking):**
+
+Each $ g_{ij} $ is defined as:
+
+$$
+g_{ij} = (w_j - c_v) \cdot a_{ij} - c_j \cdot u_{ij} \quad \forall i \in N, j \in M
+$$
+
+2. **Offer Rate Bounded by Demand:**
+
+$$
+a_{ij} \leq D_{ij} \quad \forall i \in N, j \in M
+$$
+
+3. **Unfulfilled Demand Definition:**
+
+$$
+u_{ij} \geq D_{ij} - a_{ij} \quad \forall i \in N, j \in M
+$$
+
+4. **Zone Workload Definition (Auxiliary Linking):**
+
+$$
+WL_i = \sum_{j \in M} \frac{a_{ij}}{K \mu_i} \quad \forall i \in N
+$$
+
+5. **Total Workload Aggregation (Auxiliary Linking):**
+
+$$
+L = \sum_{i \in N} WL_i
+$$
+
+6. **Excess Workload Definition:**
+
+$$
+W \geq L - 1
+$$
+
+7. **Non-negativity:**
+
+$$
+a_{ij} \geq 0, \quad u_{ij} \geq 0, \quad WL_i \geq 0, \quad L \geq 0, \quad W \geq 0 \quad \forall i \in N, j \in M
+$$
+
+### Summary of the Mathematical Model
+
+**Sets:**
+
+- $ N = \{Z1, Z2, Z3\} $: set of service zones.
+- $ M = \{P1, P2, P3\} $: set of product categories.
+
+**Parameters:**
+
+- $ D_{ij} $: demand for product $ j $ in zone $ i $ (units/period).
+- $ w_j $: unit profit for category $ j $. $ w_{P1} = 2.00, w_{P2} = 4.50, w_{P3} = 8.00 $.
+- $ c_j $: opportunity cost for category $ j $. $ c_{P1} = 0.60, c_{P2} = 1.50, c_{P3} = 3.00 $.
+- $ s_i $: distance from warehouse to zone $ i $. $ s_{Z1} = 4, s_{Z2} = 7, s_{Z3} = 11 $.
+- $ v = 40 $ mph: drone speed.
+- $ \mu_i = v / (2 s_i) $: per-drone service rate for zone $ i $.
+- $ K = 8 $: number of drones.
+- $ c_w = 100.00 $: delivery delay cost.
+- $ c_v = 1.20 $: variable cost per delivery.
+- $ c_F = 0.50 $: fixed cost per drone per period.
+
+**Decision Variables:**
+
+- $ a_{ij} \geq 0 $: offer rate for category $ j $ in zone $ i $.
+- $ u_{ij} \geq 0 $: unfulfilled demand for category $ j $ in zone $ i $.
+- $ g_{ij} $: net contribution auxiliary for pair $ (i,j) $ (free variable).
+- $ WL_i \geq 0 $: zone $ i $ workload auxiliary.
+- $ L \geq 0 $: total workload auxiliary.
+- $ W \geq 0 $: excess workload.
+
+**Objective Function:**
+
+Maximize:
+
+$$
+Z = \sum_{i \in N} \sum_{j \in M} g_{ij} - c_w \cdot W - K \cdot c_F
+$$
+
+**Constraints:**
+
+1. **Net contribution definition:**
+$$
+g_{ij} = (w_j - c_v) \cdot a_{ij} - c_j \cdot u_{ij} \quad \forall i \in N, j \in M
+$$
+
+2. **Offer rate bounded by demand:**
+$$
+a_{ij} \leq D_{ij} \quad \forall i \in N, j \in M
+$$
+
+3. **Unfulfilled demand definition:**
+$$
+u_{ij} \geq D_{ij} - a_{ij} \quad \forall i \in N, j \in M
+$$
+
+4. **Zone workload definition:**
+$$
+WL_i = \sum_{j \in M} \frac{a_{ij}}{K \mu_i} \quad \forall i \in N
+$$
+
+5. **Total workload aggregation:**
+$$
+L = \sum_{i \in N} WL_i
+$$
+
+6. **Excess workload:**
+$$
+W \geq L - 1
+$$
+
+7. **Non-negativity:**
+$$
+a_{ij}, u_{ij}, WL_i, L, W \geq 0
+$$
+
+1. Optimization Problem Classification: LP
+2. Problem Scale: Small

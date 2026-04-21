@@ -1,0 +1,156 @@
+### Step 1: Decision Variables Definition
+
+Let’s define the decision variables for the problem.
+
+Let’s denote:
+
+- $ r_{ijt} $: a non-negative integer variable representing the number of empty relocation flights from vertiport $ i $ to vertiport $ j $ in time window $ t $.
+- $ w_{it} $: an integer variable representing the number of idle drones at vertiport $ i $ in time window $ t $.
+- $ F $: a variable representing the maximum total fleet size required across all time windows.
+- $ S_i $: a variable representing the maximum parking space capacity required at vertiport $ i $ across all time windows.
+
+Thus, we have:
+
+- $ r_{ijt} \ge 0, \in \mathbb{Z} $ for all $ i, j \in V, t \in T $.
+- $ w_{it} \ge 1, \in \mathbb{Z} $ for all $ i \in V, t \in T $.
+- $ F \ge 0 $.
+- $ S_i \ge 0 $ for all $ i \in V $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total investment and operational costs, which include the costs for the maximum fleet size, the maximum parking spaces at each vertiport, and the relocation operations.
+
+The objective function is:
+
+$$
+\min Z = C_{fleet} F + \sum_{i \in V} C_{space} S_i + \sum_{t \in T} \sum_{i \in V} \sum_{j \in V} C_{reloc} r_{ijt}
+$$
+
+Where:
+
+- $ C_{fleet} $ is the unit cost per drone in the fleet.
+- $ C_{space} $ is the unit cost per parking space.
+- $ C_{reloc} $ is the unit cost per relocation flight.
+- $ V $ is the set of vertiports and $ T $ is the set of time windows.
+
+### Step 3: Constraint Construction
+
+Now, let’s identify and translate the constraints into mathematical expressions.
+
+1.  **Flow Conservation Constraint:**
+
+The rate of arrivals must equal the rate of departures for each node $ i $ in every time period $ t $. The net demand outflow must be balanced by the net relocation inflow.
+
+For each vertiport $ i \in V $ and time $ t \in T $:
+
+$$
+\sum_{j \in V} (n_{jit} + r_{jit}) = \sum_{j \in V} (n_{ijt} + r_{ijt})
+$$
+
+Where:
+
+- $ n_{ijt} $ is the passenger demand flow from $ i $ to $ j $ at time $ t $.
+
+2.  **Fleet Sizing Constraint (Minimax):**
+
+The declared fleet size $ F $ must be sufficient to cover the active fleet, charging fleet, and idle fleet in every time window $ t $.
+
+For each time $ t \in T $:
+
+$$
+F \ge \sum_{i \in V} \sum_{j \in V} (n_{ijt} + r_{ijt}) (\tau_{ij} + t_{charge}) + \sum_{i \in V} w_{it}
+$$
+
+Where:
+
+- $ \tau_{ij} $ is the flight time.
+- $ t_{charge} $ is the charging duration.
+
+3.  **Space Capacity Constraint (Minimax):**
+
+The declared capacity $ S_i $ for vertiport $ i $ must accommodate the idle drones and the drones charging at that location in every time window $ t $.
+
+For each vertiport $ i \in V $ and time $ t \in T $:
+
+$$
+S_i \ge w_{it} + \text{ChargingAt}_{it}
+$$
+
+(Note: $ \text{ChargingAt}_{it} $ represents the number of drones charging at $ i $ at time $ t $, derived from incoming flows).
+
+4.  **Minimum Idle Stock Constraint:**
+
+There must be at least one idle drone at each vertiport to handle uncertainty or immediate service.
+
+For each vertiport $ i \in V $ and time $ t \in T $:
+
+$$
+w_{it} \ge 1
+$$
+
+5.  **Integer and Non-negativity Constraints:**
+
+$$
+r_{ijt} \in \mathbb{Z}_{\ge 0}, \quad w_{it} \in \mathbb{Z}_{\ge 1}, \quad F \ge 0, \quad S_i \ge 0
+$$
+
+### Summary of the Mathematical Model
+
+The mathematical model for the problem is as follows:
+
+**Decision Variables:**
+
+- $ r_{ijt} \in \mathbb{Z}_{\ge 0} $ for all $ i,j \in V, t \in T $.
+- $ w_{it} \in \mathbb{Z}_{\ge 1} $ for all $ i \in V, t \in T $.
+- $ F, S_i \ge 0 $.
+
+**Objective Function:**
+
+Minimize:
+
+$$
+\min Z = C_{fleet} F + \sum_{i \in V} C_{space} S_i + \sum_{t \in T} \sum_{i \in V} \sum_{j \in V} C_{reloc} r_{ijt}
+$$
+
+**Constraints:**
+
+1.  **Flow Conservation:**
+
+For each $ i \in V, t \in T $:
+
+$$
+\sum_{j \in V} (n_{jit} + r_{jit}) = \sum_{j \in V} (n_{ijt} + r_{ijt})
+$$
+
+2.  **Fleet Sizing:**
+
+For each $ t \in T $:
+
+$$
+F \ge \sum_{i,j} (n_{ijt} + r_{ijt}) (\tau_{ij} + t_{charge}) + \sum_{i} w_{it}
+$$
+
+3.  **Space Capacity:**
+
+For each $ i \in V, t \in T $:
+
+$$
+S_i \ge w_{it} + \text{ChargingAt}_{it}
+$$
+
+4.  **Minimum Idle Stock:**
+
+For each $ i \in V, t \in T $:
+
+$$
+w_{it} \ge 1
+$$
+
+5.  **Integer Constraints:**
+
+$$
+r_{ijt}, w_{it} \in \mathbb{Z}
+$$
+
+1. Optimization Problem Classification: MILP
+2. Problem Scale: Medium

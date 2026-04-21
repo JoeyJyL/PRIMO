@@ -1,0 +1,194 @@
+<think>
+Identifying the decision variables, objective function, and constraints for the Robust Vehicle Routing Problem with Drones (VRPD) in disaster response, based on Sun, Wu & Zhang (2026), "Robust optimization for truck-and-drone collaboration with travel time uncertainties", Transportation Research Part B 204, 103378.
+
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the simplified problem with 1 truck (K={1}), 1 drone (D={1}), customer nodes {1, 2, 3} (node 3 is truck-unreachable), and depot start (node 0) and end (node 4).
+
+Let's denote:
+
+- $ x_{ijk} \in \{0,1\} $: equals 1 if truck $ k \in K $ travels on link $ (i,j) \in E^k $, and 0 otherwise.
+- $ y_{ijd} \in \{0,1\} $: equals 1 if drone $ d \in D $ travels on link $ (i,j) \in E^d $, and 0 otherwise.
+- $ c_{idm} \in \{0,1\} $: equals 1 if drone $ d $ serves task $ m $ at node $ i $, and 0 otherwise.
+- $ g_{im} \in \{0,1\} $: equals 1 if task $ m $ at node $ i $ is unserved (penalty variable), and 0 otherwise.
+- $ t^a_{ik}^K \geq 0 $: arrival time of truck $ k $ at node $ i $.
+- $ t^d_{ik}^K \geq 0 $: departure time of truck $ k $ at node $ i $.
+- $ t^a_{id}^D \geq 0 $: arrival time of drone $ d $ at node $ i $.
+- $ t^d_{id}^D \geq 0 $: departure time of drone $ d $ at node $ i $.
+- $ t_{im} \geq 0 $: service start time of task $ m $ at node $ i $.
+- $ w^K_{ik} \geq 0 $: cumulative weight delivered by truck $ k $ up to node $ i $.
+- $ w^D_{id} \geq 0 $: cumulative weight delivered by drone $ d $ since last takeoff, at node $ i $.
+- $ v_{id} \geq 0 $: cumulative flying time of drone $ d $ since last takeoff, at node $ i $.
+- $ \theta^K_{ij} \in [0,1] $: deviation coefficient for truck travel time on link $ (i,j) $.
+- $ \theta^D_{ij} \in [0,1] $: deviation coefficient for drone travel time on link $ (i,j) $.
+
+Thus, we have the above variable types for the problem.
+
+### Step 2: Objective Function Construction
+
+The problem is formulated as a min-max-min robust optimization problem. The outer minimization selects the best truck-and-drone route. The inner maximization identifies the worst travel time uncertainty realization. Given the route and uncertainty, the inner minimization computes the minimum priority cost.
+
+The full robust objective is:
+
+$$
+\min_{x, y, c, g} \left( B \sum_{i \in V} \sum_{m \in \mathcal{M}} p_{im} g_{im} + \max_{\theta^K \in \mathcal{U}^K, \theta^D \in \mathcal{U}^D} \min_{t_{im}} \sum_{i \in V} \sum_{m \in \mathcal{M}} p_{im} t_{im} \right)
+$$
+
+Where:
+- $ p_{im} $ is the priority coefficient of task $ m $ at node $ i $.
+- $ t_{im} $ is the service start time of task $ m $ at node $ i $.
+- $ B $ is a large penalty for unserved tasks.
+- $ g_{im} = 1 $ if task $ m $ at node $ i $ is unserved.
+
+The cardinality-constrained uncertainty sets are:
+
+$$
+\mathcal{U}^K = \left\{ \tilde{t}^K : \tilde{t}^K_{ij} = t^K_{ij} + \theta^K_{ij} \hat{t}^K_{ij},\ \sum_{(i,j) \in E^k} \theta^K_{ij} \leq \Gamma^K,\ 0 \leq \theta^K_{ij} \leq 1 \right\}
+$$
+
+$$
+\mathcal{U}^D = \left\{ \tilde{t}^D : \tilde{t}^D_{ij} = t^D_{ij} + \theta^D_{ij} \hat{t}^D_{ij},\ \sum_{(i,j) \in E^d} \theta^D_{ij} \leq \Gamma^D,\ 0 \leq \theta^D_{ij} \leq 1 \right\}
+$$
+
+For the deterministic baseline ($ \Gamma^K = \Gamma^D = 0 $), the problem reduces to:
+
+$$
+\min_{x, y, c, g}\ \sum_{i \in V} \sum_{m \in \mathcal{M}} p_{im} t_{im} + B \sum_{i \in V} \sum_{m \in \mathcal{M}} p_{im} g_{im}
+$$
+
+### Step 3: Constraint Construction
+
+Now, let's identify and translate the constraints into mathematical expressions.
+
+1. **Flow Conservation (Trucks):**
+
+All trucks depart from the starting depot and return to the ending depot:
+
+$$
+\sum_{j \in V^k} x_{o_s j k} = \sum_{i \in V^k} x_{i o_e k} = 1, \quad \forall k \in K
+$$
+
+Flow conservation at intermediate truck nodes:
+
+$$
+\sum_{i \in V^k} x_{ijk} = \sum_{i \in V^k} x_{jik}, \quad \forall j \in V^k \setminus \{o_s, o_e\}, k \in K
+$$
+
+2. **Flow Conservation (Drones):**
+
+Similarly for drones:
+
+$$
+\sum_{j \in V^d} y_{o_s jd} = \sum_{i \in V^d} y_{i o_e d} = 1, \quad \forall d \in D
+$$
+
+$$
+\sum_{i \in V^d} y_{jid} = \sum_{i \in V^d} y_{ijd}, \quad \forall j \in V^d \setminus \{o_s, o_e\}, d \in D
+$$
+
+3. **Task Status:**
+
+Each truck-reachable customer node's task must be served by a truck, a drone, or remain unserved (penalized):
+
+$$
+\sum_{k \in K} \sum_{i \in V^k} x_{ijk} + \sum_{d \in D} c_{jdm} + g_{jm} = 1, \quad \forall j \in V^k \setminus \{o_s, o_e\}, m \in \mathcal{M}
+$$
+
+For truck-unreachable nodes (drone only):
+
+$$
+\sum_{d \in D} c_{idm} + g_{im} = 1, \quad \forall i \in V^d \setminus V^k, m \in \mathcal{M}
+$$
+
+4. **Drone Capacity:**
+
+The drone capacity constraint tracks cumulative weight:
+
+$$
+w^D_{id} \leq L^D \sum_{j \in V^d} y_{jid}, \quad \forall i \in V^d, d \in D
+$$
+
+$$
+w^D_{id} \geq \sum_{m \in \mathcal{M}} d^w_{im} c_{idm}, \quad \forall i \in V^d, d \in D
+$$
+
+5. **Drone Flight Duration (Robust):**
+
+Under uncertainty, drone flight duration uses maximum travel times $ t^D_{ij} + \hat{t}^D_{ij} $:
+
+$$
+v_{jd} \geq \sum_{i \in V^d} (t^D_{ij} + \hat{t}^D_{ij}) y_{ijd} + \sum_{m \in \mathcal{M}} d^t_{jm} c_{jdm} - \bar{t} \sum_{i \in V^k} \sum_{k \in K} x_{ijk}, \quad \forall j \in V^d, d \in D
+$$
+
+$$
+v_{jd} \leq T^D \sum_{i \in V^d} y_{jid}, \quad \forall j \in V^d, d \in D
+$$
+
+6. **Truck-Drone Time Synchronization:**
+
+When a drone departs from or arrives at a truck-visited node $ i $, a truck must be present:
+
+$$
+\sum_{k \in K} t^a_{ik}^K + \bar{t} \left( \sum_{j \in V^d} y_{ijd} + \sum_{j \in V^k} \sum_{k \in K} x_{ijk} - 2 \right) \leq t^d_{id}^D \leq \sum_{k \in K} t^d_{ik}^K - \bar{t} \left( \sum_{j \in V^d} y_{ijd} + \sum_{j \in V^k} \sum_{k \in K} x_{ijk} - 2 \right)
+$$
+
+7. **Service Start Time:**
+
+The service start time is determined by either the truck or drone arrival:
+
+$$
+t_{im} \geq \sum_{k \in K} t^a_{ik}^K, \quad \forall i \in V^k, m \in \mathcal{M}
+$$
+
+$$
+t_{im} \geq t^a_{id}^D + \bar{t}(c_{idm} - 1), \quad \forall i \in V^d, d \in D, m \in \mathcal{M}
+$$
+
+8. **Arrival/Departure Time Propagation:**
+
+$$
+t^a_{jk}^K \geq t^d_{ik}^K + \tilde{t}^K_{ij} x_{ijk} + \bar{t}(x_{ijk} - 1), \quad \forall i, j \in V^k, k \in K
+$$
+
+$$
+t^a_{jd}^D \geq t^d_{id}^D + \tilde{t}^D_{ij} y_{ijd} + \bar{t}(y_{ijd} - 1), \quad \forall i, j \in V^d, d \in D
+$$
+
+### Summary of the Mathematical Model
+
+**Sets:**
+- $ V = \{0,1,2,3,4\} $: All nodes (0=start depot, 4=end depot, 1-3=customers).
+- $ V^k = \{0,1,2,4\} $: Truck-reachable nodes.
+- $ V^d = \{0,1,2,3,4\} $: Drone-reachable nodes (all nodes).
+- $ K = \{1\} $: Set of trucks.
+- $ D = \{1\} $: Set of drones.
+- $ \mathcal{M} = \{1,2\} $: Task types (1=delivery, 2=surveillance).
+
+**Parameters:**
+- $ t^K_{ij} $: Nominal truck travel time on link $ (i,j) $ (Euclidean distance / 30 km/h).
+- $ t^D_{ij} $: Nominal drone travel time on link $ (i,j) $ (Euclidean distance / 60 km/h).
+- $ \hat{t}^K_{ij} = 0.3 t^K_{ij} $, $ \hat{t}^D_{ij} = 0.3 t^D_{ij} $: Maximum travel time deviations.
+- $ \Gamma^K = 1 $, $ \Gamma^D = 1 $: Uncertainty budgets.
+- $ p_{1,1} = 2 $, $ p_{2,1} = 1 $, $ p_{3,2} = 3 $: Priority coefficients.
+- $ d^w_{1,1} = 5 $, $ d^w_{2,1} = 3 $: Delivery weight demands (kg).
+- $ d^t_{3,2} = 5 $ min: Surveillance time demand.
+- $ L^K = 100 $ kg, $ L^D = 10 $ kg, $ L^R = 1 $, $ T^D = 30 $ min, $ B = 1000 $.
+
+**Decision Variables:**
+- $ x_{ijk}, y_{ijd}, c_{idm}, g_{im} \in \{0,1\} $
+- $ t_{im}, w^K_{ik}, w^D_{id}, v_{id}, t^a_{ik}^K, t^d_{ik}^K, t^a_{id}^D, t^d_{id}^D \geq 0 $
+- $ \theta^K_{ij}, \theta^D_{ij} \in [0,1] $
+
+**Objective Function (Deterministic baseline for Gurobi solve):**
+
+Minimize:
+
+$$
+\sum_{i \in V} \sum_{m \in \mathcal{M}} p_{im} t_{im} + B \sum_{i \in V} \sum_{m \in \mathcal{M}} p_{im} g_{im}
+$$
+
+**Constraints:** (as listed above, constraints 1-8)
+</think>
+
+1. Optimization Problem Classification: MILP
+2. Problem Size: Small

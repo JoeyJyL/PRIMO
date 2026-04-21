@@ -1,0 +1,30 @@
+SkyCity Transport Authority is designing the initial Urban Air Mobility (UAM) network to connect key urban hubs.
+**Goal:** Select locations to build Vertiports to maximize the **Robust Net Profit** (Revenue - Operating Cost - Fixed Construction Cost) under a **Worst-Case Demand Scenario**.
+
+**Competition & Mode Choice:**
+- Passengers choose between **Ground Taxi** and **Air Taxi**.
+- Choice behavior follows a Logit Model based on Utility ($U$):
+  $$ U = -0.1 \times \text{Time(min)} - 0.05 \times \text{Cost(\$)} $$
+  $$ P_{air} = \frac{e^{U_{air}}}{e^{U_{air}} + e^{U_{ground}}} $$
+- Air Taxi is available for a route only if **BOTH** origin and destination Vertiports are open.
+
+**Robustness (Uncertainty):**
+- Demand is uncertain. To ensure financial safety, we optimize for the **Worst-Case Scenario** (Nominal Demand - Uncertainty Margin).
+
+**Data - Candidate Vertiports:**
+- **V1 (Downtown):** Fixed Cost $1000/day.
+- **V2 (Tech Park):** Fixed Cost $800/day.
+- **V3 (Int'l Airport):** Fixed Cost $1200/day.
+
+**Data - Potential Routes (OD Pairs):**
+*Route 1: Downtown (V1) <-> Tech Park (V2)*
+- Nominal Demand: 500 | Uncertainty: 100
+- Ground: 45 min, $30 | Air: 10 min, $80 (Ticket), $40 (OpCost)
+
+*Route 2: Downtown (V1) <-> Airport (V3)*
+- Nominal Demand: 800 | Uncertainty: 200
+- Ground: 60 min, $50 | Air: 15 min, $100 (Ticket), $50 (OpCost)
+
+*Route 3: Tech Park (V2) <-> Airport (V3)*
+- Nominal Demand: 300 | Uncertainty: 50
+- Ground: 40 min, $40 | Air: 12 min, $90 (Ticket), $45 (OpCost)

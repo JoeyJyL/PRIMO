@@ -1,0 +1,10 @@
+{
+  "total_samples": 82,
+  "train_samples": 65,
+  "test_samples": 17,
+  "datasets_used": [
+    "industryor"
+  ],
+  "dataset_name": "industryor",
+  "processed_at": "2025-10-03T20:13:25.596969+00:00"
+}

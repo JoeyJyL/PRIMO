@@ -1,0 +1,40 @@
+"SeoulAir" operates a UAM network connecting the City Center, a Residential District, and the Airport.
+**Problem:** Determine the optimal **Fleet Size**, **Vertiport Capacity** (Parking Spaces), and **Relocation Operations** to serve daily demand.
+**Methodology:**
+- Decompose the day into **2 Steady-State Time Windows**:
+  - **T1 (AM Peak):** Commuters fly Residential → City.
+  - **T2 (PM Peak):** Commuters fly City → Residential.
+- For each window, determine the optimal flows (Service + Relocation) to balance the network.
+- **Global Planning:** The required infrastructure is the **Maximum** needed across all time windows.
+
+**Data - Vertiports:**
+- **V1 (Residential):** High Outflow in AM.
+- **V2 (City Center):** High Inflow in AM.
+- **V3 (Airport):** Constant low demand.
+
+**Demand Patterns (Trips/hr):**
+*T1 (AM Peak):*
+- V1 → V2: 20 trips/hr.
+- V3 → V2: 5 trips/hr.
+*T2 (PM Peak):*
+- V2 → V1: 20 trips/hr.
+- V2 → V3: 5 trips/hr.
+
+**Operational Parameters:**
+- **Flight Time:** 0.5 hours (all links).
+- **Charging Time:** 0.5 hours (required after every flight).
+- **Safety Buffer:** At least **2 idle drones** required at each vertiport at all times.
+
+**Cost Parameters:**
+- **Fleet Cost:** $100 per drone.
+- **Parking Space Cost:** $20 per space.
+- **Relocation Flight Cost:** $5 per flight (energy/wear).
+
+**Objective:**
+Minimize Total Cost = (Fleet Cost) + (Parking Space Cost) + (Relocation Cost).
+
+**Expected Analysis:**
+- In AM Peak: V2 receives 25 drones/hr but sends 0 → needs relocation V2→V1 (20) and V2→V3 (5).
+- In PM Peak: V2 sends 25 drones/hr but receives 0 → needs relocation V1→V2 (20) and V3→V2 (5).
+- Total relocation per period: 25 flights.
+- Fleet sizing: (25 passenger + 25 relocation) × (0.5 + 0.5) + 6 idle = 56 drones.

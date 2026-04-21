@@ -1,0 +1,98 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+Let's denote:
+
+- $ x_{ij} $: a binary variable indicating if customer $ i $ is served by facility $ j $.
+- $ y_j $: a binary variable indicating if facility $ j $ is opened.
+
+Thus, we have:
+
+- $ x_{ij} \in \{0, 1\} $ for all $ i \in I $ and $ j \in J $.
+- $ y_j \in \{0, 1\} $ for all $ j \in J $.
+
+### Step 2: Objective Function Construction
+
+The goal is to maximize the total covered demand weighted by the importance of each customer.
+
+The objective function is:
+
+$$
+\text{Maximize } Z = \sum_{j \in J} \sum_{i \in I} w_i x_{ij}
+$$
+
+Where:
+
+- $ w_i $ is the demand or weight of customer $ i $.
+- $ I $ is the set of demand nodes (customers).
+- $ J $ is the set of candidate facility locations.
+
+### Step 3: Constraint Construction
+
+Now, let's identify and translate the constraints into mathematical expressions.
+
+1. **Budget of Facilities Constraint:**
+
+Exactly $ P $ facilities must be opened.
+
+$$
+\sum_{j \in J} y_j = P
+$$
+
+Where:
+
+- $ P $ is the number of facilities to open.
+
+2. **Assignment Logic Constraint:**
+
+Customer $ i $ can be served by facility $ j $ only if facility $ j $ is open.
+
+For all $ i \in I $ and $ j \in J $:
+
+$$
+x_{ij} \le y_j
+$$
+
+3. **Single Service Constraint:**
+
+Each customer is served at most once.
+
+For all $ i \in I $:
+
+$$
+\sum_{j \in J} x_{ij} \le 1
+$$
+
+4. **Energy/Range Capacity Constraint:**
+
+For each open facility, the sum of round-trip distances to all served customers cannot exceed the maximum energy budget $ R_{max} $.
+
+For all $ j \in J $:
+
+$$
+\sum_{i \in I} (2 \cdot d_{ij}) x_{ij} \le R_{max}
+$$
+
+Where:
+
+- $ d_{ij} $ is the one-way distance from facility $ j $ to customer $ i $.
+- $ R_{max} $ is the maximum total flight range available at a facility.
+
+5. **Mandatory Coverage Constraint:**
+
+Village V1 must be served regardless of which station is opened.
+
+$$
+\sum_{j \in J} x_{V1, j} = 1
+$$
+
+6. **Binary Constraints:**
+
+The decision variables must be binary.
+
+For all $ i \in I $ and $ j \in J $:
+
+$$
+x_{ij} \in \{0, 1\}, \quad y_j \in \{0, 1\}
+$$

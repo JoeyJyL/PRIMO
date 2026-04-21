@@ -1,0 +1,130 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+Let's denote:
+
+- $ y_k $: a binary variable indicating whether depot $ k $ is open (1) or not (0).
+- $ x_{ij} $: a binary variable indicating if a UAV traverses the arc from node $ i $ to node $ j $ (1) or not (0).
+- $ f_{ij} $: a continuous variable representing the single-commodity flow on arc $ (i, j) $, used for subtour elimination.
+- $ d_i $: a continuous variable representing the cumulative travel distance upon arriving at node $ i $, used for range checking.
+
+Thus, we have:
+
+- $ y_k \in \{0, 1\} $ for all candidate depots $ k \in D $.
+- $ x_{ij} \in \{0, 1\} $ for all arcs $ (i, j) \in A $.
+- $ f_{ij} \ge 0 $ for all arcs $ (i, j) \in A $.
+- $ d_i \ge 0 $ for all nodes $ i \in N $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total cost, which includes the fixed opening costs for depots and the variable routing costs (distance).
+
+The objective function is:
+
+$$
+\min \sum_{k \in D} F_k y_k + \sum_{(i,j) \in A} c_{ij} x_{ij}
+$$
+
+Where:
+
+- $ F_k $ is the fixed opening cost for depot $ k $.
+- $ c_{ij} $ is the distance/cost between node $ i $ and node $ j $.
+
+### Step 3: Constraint Construction
+
+1. **Target Coverage Constraint:**
+
+Each target point must be entered and left exactly once.
+
+For each Target $ j \in T $:
+
+$$
+\sum_{i \in N} x_{ij} = 1
+$$
+
+For each Target $ i \in T $:
+
+$$
+\sum_{j \in N} x_{ij} = 1
+$$
+
+2. **Depot Logic & Flow Conservation Constraint:**
+
+Routes must start and end at the same open depot. If a route leaves depot $ k $, then depot $ k $ must be open.
+
+For each Depot $ k \in D $:
+
+$$
+\sum_{j \in T} x_{kj} = \sum_{j \in T} x_{jk}
+$$
+
+$$
+\sum_{j \in T} x_{kj} \le M y_k
+$$
+
+Where $ M = |T| $ is the number of targets.
+
+3. **Single-Commodity Flow Subtour Elimination (replacing MTZ):**
+
+Flow capacity is limited by routing decisions:
+
+$$
+f_{ij} \le |T| \cdot x_{ij} \quad \forall (i, j) \in A
+$$
+
+Each target consumes exactly 1 unit of flow:
+
+For each Target $ j \in T $:
+
+$$
+\sum_{i \in N} f_{ij} - \sum_{k \in N} f_{jk} = 1
+$$
+
+Flow can only originate from open depots:
+
+For each Depot $ k \in D $:
+
+$$
+\sum_{j \in N} f_{kj} \le |T| \cdot y_k
+$$
+
+4. **Cumulative Distance Tracking (for Range Checking only):**
+
+Distance is initialized at depots:
+
+$$
+d_k = 0 \quad \forall k \in D
+$$
+
+Distance propagation on active arcs:
+
+For each arc $ (i, j) $ where $ j \in T $:
+
+$$
+d_j \ge d_i + c_{ij} - M'(1 - x_{ij})
+$$
+
+Where $ M' $ is a sufficiently large constant.
+
+5. **Range Constraint:**
+
+The cumulative distance at any target must not exceed the battery range:
+
+$$
+d_j \le L \quad \forall j \in T
+$$
+
+6. **Return Range Constraint:**
+
+If a target $ i $ returns to depot $ k $, the total round-trip distance must be within range:
+
+$$
+d_i + c_{ik} \le L + M'(1 - x_{ik}) \quad \forall i \in T, k \in D
+$$
+
+7. **No Depot-to-Depot Arcs:**
+
+$$
+\sum_{k_1 \in D} \sum_{k_2 \in D, k_2 \neq k_1} x_{k_1 k_2} = 0
+$$

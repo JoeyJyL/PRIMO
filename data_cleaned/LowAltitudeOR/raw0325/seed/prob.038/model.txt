@@ -1,0 +1,123 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+Let's denote:
+
+- $ y_s $: a binary variable equal to 1 if station site $ s $ is opened, and 0 otherwise.
+- $ z_e $: a binary variable equal to 1 if trip $ e $ is covered (both pickup and drop-off within range of some open station), and 0 otherwise.
+
+Thus, we have:
+
+- $ y_s \in \{0, 1\} $ for all $ s \in S $.
+- $ z_e \in \{0, 1\} $ for all $ e \in E $.
+
+### Step 2: Pre-processing
+
+Before building the model, we pre-compute coverage relationships using the Haversine distance formula:
+
+$$
+d(i,j) = r \times \text{hav}^{-1}\left(\text{hav}(\gamma_j - \gamma_i) + \cos(\gamma_i) \cos(\gamma_j) \text{hav}(\lambda_j - \lambda_i)\right)
+$$
+
+where $ r = 3958.8 $ miles (Earth's radius), $ \gamma $ = latitude, $ \lambda $ = longitude.
+
+We define:
+
+- $ P_{es} = 1 $ if the pickup location of trip $ e $ is within $ R $ miles of station $ s $, 0 otherwise.
+- $ Q_{es} = 1 $ if the drop-off location of trip $ e $ is within $ R $ miles of station $ s $, 0 otherwise.
+
+### Step 3: Objective Function Construction
+
+The goal is to minimize the total fixed cost of opening stations:
+
+$$
+\text{Minimize } Z = \sum_{s \in S} F_s \cdot y_s
+$$
+
+Where $ F_s $ is the annualized fixed cost of opening station $ s $.
+
+### Step 4: Constraint Construction
+
+1. **Pickup Coverage:**
+
+A trip's pickup is covered if at least one open station is within range:
+
+$$
+\sum_{s \in S} P_{es} \cdot y_s \geq z_e \quad \forall e \in E
+$$
+
+2. **Drop-off Coverage:**
+
+A trip's drop-off is covered if at least one open station is within range:
+
+$$
+\sum_{s \in S} Q_{es} \cdot y_s \geq z_e \quad \forall e \in E
+$$
+
+3. **Minimum Demand Fulfillment (Coverage Rate):**
+
+At least $ CS \times |E| $ trips must be covered:
+
+$$
+\sum_{e \in E} z_e \geq \lceil CS \times |E| \rceil
+$$
+
+4. **Binary Constraints:**
+
+$$
+y_s \in \{0, 1\} \quad \forall s \in S, \qquad z_e \in \{0, 1\} \quad \forall e \in E
+$$
+
+### Summary of the Mathematical Model
+
+**Sets:**
+
+- $ S = \{S1, S2, \ldots, S10\} $: set of candidate station sites.
+- $ E = \{T1, T2, \ldots, T20\} $: set of estimated air taxi trips (demand points).
+
+**Parameters:**
+
+- $ F_s $: fixed cost of opening station $ s $ (\$K/year).
+- $ R = 1.0 $ mile: maximum on-road travel distance.
+- $ CS = 0.70 $: minimum demand fulfillment rate (70%).
+- $ P_{es} \in \{0,1\} $: 1 if pickup of trip $ e $ is within $ R $ miles of station $ s $.
+- $ Q_{es} \in \{0,1\} $: 1 if drop-off of trip $ e $ is within $ R $ miles of station $ s $.
+
+**Decision Variables:**
+
+- $ y_s \in \{0, 1\} $: whether to open station $ s $.
+- $ z_e \in \{0, 1\} $: whether trip $ e $ is covered.
+
+**Objective Function:**
+
+Minimize:
+
+$$
+Z = \sum_{s \in S} F_s \cdot y_s
+$$
+
+**Constraints:**
+
+1. **Pickup coverage:**
+$$
+\sum_{s \in S} P_{es} \cdot y_s \geq z_e \quad \forall e \in E
+$$
+
+2. **Drop-off coverage:**
+$$
+\sum_{s \in S} Q_{es} \cdot y_s \geq z_e \quad \forall e \in E
+$$
+
+3. **Minimum coverage rate:**
+$$
+\sum_{e \in E} z_e \geq \lceil CS \times |E| \rceil
+$$
+
+4. **Binary constraints:**
+$$
+y_s \in \{0, 1\}, \quad z_e \in \{0, 1\}
+$$
+
+1. Optimization Problem Classification: ILP
+2. Problem Scale: Small

@@ -1,0 +1,51 @@
+### Step 1: Decision Variables Definition
+
+- $ y_{ij} \in \{0, 1\} $: binary variable indicating if edge $ (i,j) $ is opened, for all $ (i,j) \in E $.
+- $ x_{ijk} \ge 0 $: continuous variable representing the flow on edge $ (i,j) $ destined for demand node $ k $, for all $ (i,j) \in E, k \in D $.
+
+**Reformulation note (Disaggregated Per-Commodity Capacity Linking):** The original formulation uses an aggregated Big-M topology constraint $ \sum_k x_{ijk} \le M \, y_{ij} $ with a loose $ M = 1000 $. In this reformulation, we **disaggregate** the capacity constraint into per-commodity linking constraints:
+
+$$
+x_{ijk} \le Dem_k \cdot y_{ij}, \quad \forall \, (i,j) \in E, \, k \in D
+$$
+
+Since the maximum flow of commodity $ k $ on any edge cannot exceed $ Dem_k $, this provides the tightest possible Big-M coefficient for each commodity individually. The disaggregated formulation yields a strictly tighter LP relaxation than the aggregated version, while preserving the same integer-optimal solution.
+
+### Step 2: Objective Function Construction
+
+$$
+\min Z = \underbrace{\sum_{(i,j) \in E} d_{ij} \, y_{ij}}_{\text{Network Length}} + \alpha \underbrace{\sum_{k \in D} \sum_{(i,j) \in E} d_{ij} \, x_{ijk}}_{\text{Operational Cost}}
+$$
+
+Where $ \alpha = 0.01 $.
+
+### Step 3: Constraint Construction
+
+1. **Disaggregated Capacity Linking (replaces aggregated Big-M):**
+
+For each edge $ (i,j) \in E $ and each demand $ k \in D $:
+
+$$
+x_{ijk} \le Dem_k \cdot y_{ij}
+$$
+
+This replaces the single aggregated constraint $ \sum_k x_{ijk} \le M \, y_{ij} $ with $ |D| $ tighter per-commodity constraints per edge.
+
+2. **Flow Conservation Constraint:**
+
+For each node $ i \in N $ and demand node $ k \in D $:
+
+$$
+\sum_{j:(i,j) \in E} x_{ijk} - \sum_{j:(j,i) \in E} x_{jik} = 
+\begin{cases} 
+Dem_k & \text{if } i = S \\
+-Dem_k & \text{if } i = k \\
+0 & \text{otherwise}
+\end{cases}
+$$
+
+3. **Binary and Non-negativity Constraints:**
+
+$$
+y_{ij} \in \{0, 1\}, \quad x_{ijk} \ge 0
+$$

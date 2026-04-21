@@ -1,0 +1,51 @@
+### Step 1: Decision Variables Definition
+
+- $ y_j \in \{0, 1\} $: binary variable indicating if Transshipment Hub $ j $ is opened, for $ j \in H $.
+- $ x_{jk} \in \{0, 1\} $: binary variable indicating if Customer $ k $ is assigned to Hub $ j $, for $ j \in H, k \in C $.
+
+**Reformulation note (Indicator Constraint + Variable Elimination):** The original formulation uses an explicit load variable $ L_j $ with equality constraint $ L_j = \sum_k D_k x_{jk} $ and individual linking constraints $ x_{jk} \le y_j $. In this reformulation, we make two changes: (1) We **eliminate** the load variable $ L_j $ by substituting the expression $ \sum_k D_k x_{jk} $ directly into the quadratic congestion term in the objective. (2) We replace the individual linking constraints $ x_{jk} \le y_j $ with **indicator constraints**: $ y_j = 0 \Rightarrow x_{jk} = 0 $, implemented via `addGenConstrIndicator`. This captures the same logical relationship — a customer cannot be assigned to a closed hub — using a single general constraint per (hub, customer) pair rather than a linear inequality.
+
+### Step 2: Objective Function Construction
+
+With $ L_j $ eliminated, the congestion term becomes $ \alpha \left(\sum_{k \in C} D_k x_{jk}\right)^2 $.
+
+$$
+\min Z = \underbrace{\sum_{j \in H} F_j y_j}_{\text{Fixed}} + \underbrace{\sum_{j \in H} \sum_{k \in C} D_k (d_{sj} + d_{jk}) \, c_{trans} \, x_{jk}}_{\text{Transport}} + \underbrace{\sum_{j \in H} \alpha \left(\sum_{k \in C} D_k x_{jk}\right)^2}_{\text{Congestion}}
+$$
+
+Where:
+- $ F_j $: fixed cost of Hub $ j $.
+- $ D_k $: demand of Customer $ k $.
+- $ d_{sj} $: distance from Supply to Hub $ j $.
+- $ d_{jk} $: distance from Hub $ j $ to Customer $ k $.
+- $ c_{trans} = 1.0 $: transport cost rate.
+- $ \alpha = 2.0 $: congestion penalty coefficient.
+
+### Step 3: Constraint Construction
+
+1. **Service Guarantee Constraint:**
+
+Each customer must be assigned to exactly one hub.
+
+$$
+\sum_{j \in H} x_{jk} = 1, \quad \forall \, k \in C
+$$
+
+2. **Indicator Constraint (replaces individual linking $ x_{jk} \le y_j $):**
+
+If Hub $ j $ is not opened, then no customer can be assigned to it.
+
+$$
+y_j = 0 \;\Rightarrow\; x_{jk} = 0, \quad \forall \, j \in H, \, k \in C
+$$
+
+Implemented via `addGenConstrIndicator(y_j, 0, x_{jk}, GRB.EQUAL, 0)`.
+
+3. **Binary Constraints:**
+
+$$
+y_j \in \{0, 1\}, \quad \forall \, j \in H
+$$
+$$
+x_{jk} \in \{0, 1\}, \quad \forall \, j \in H, \, k \in C
+$$

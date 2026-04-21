@@ -1,0 +1,127 @@
+### Step 1: Decision Variables Definition
+
+Let’s define the decision variables for the problem.
+
+Let’s denote:
+
+- $ y_j $: a binary variable indicating if Transshipment Hub $ j $ is opened.
+- $ x_{jk} $: a binary variable indicating if Customer $ k $ is assigned to Hub $ j $.
+- $ L_j $: a continuous variable representing the total load (packages) processed by Hub $ j $.
+
+Thus, we have:
+
+- $ y_j \in \{0, 1\} $ for all $ j \in H $.
+- $ x_{jk} \in \{0, 1\} $ for all $ j \in H $ and $ k \in C $.
+- $ L_j \ge 0 $ for all $ j \in H $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total cost, which consists of the fixed costs for opening hubs, the transportation costs (supply to hub and hub to customer), and a quadratic penalty for congestion at the hubs.
+
+The objective function is:
+
+$$
+\min Z = \sum_{j \in H} F_j y_j + \sum_{k \in C} \sum_{j \in H} D_k (d_{sj} + d_{jk}) c_{trans} x_{jk} + \sum_{j \in H} \alpha (L_j)^2
+$$
+
+Where:
+
+- $ F_j $ is the fixed cost to open Hub $ j $.
+- $ D_k $ is the demand of Customer $ k $.
+- $ d_{sj} $ is the distance from the Supply depot to Hub $ j $.
+- $ d_{jk} $ is the distance from Hub $ j $ to Customer $ k $.
+- $ c_{trans} $ is the transport cost per unit distance per package.
+- $ \alpha $ is the congestion penalty coefficient.
+
+### Step 3: Constraint Construction
+
+Now, let’s identify and translate the constraints into mathematical expressions.
+
+1. **Service Guarantee Constraint:**
+
+Each customer must be assigned to exactly one open Hub.
+
+For each Customer $ k \in C $:
+
+$$
+\sum_{j \in H} x_{jk} = 1
+$$
+
+A customer can only be assigned to Hub $ j $ if Hub $ j $ is actually opened.
+
+For each Hub $ j \in H $ and Customer $ k \in C $:
+
+$$
+x_{jk} \le y_j
+$$
+
+2. **Load Definition Constraint:**
+
+The load at Hub $ j $ is defined as the sum of demand from all customers assigned to it.
+
+For each Hub $ j \in H $:
+
+$$
+L_j = \sum_{k \in C} D_k x_{jk}
+$$
+
+3. **Binary and Non-negativity Constraints:**
+
+The decision variables must adhere to their respective domains.
+
+For all $ j \in H $ and $ k \in C $:
+
+$$
+y_j \in \{0, 1\}, \quad x_{jk} \in \{0, 1\}, \quad L_j \ge 0
+$$
+
+### Summary of the Mathematical Model
+
+The mathematical model for the problem is as follows:
+
+**Decision Variables:**
+
+- $ y_j \in \{0, 1\} $ for all $ j \in H $.
+- $ x_{jk} \in \{0, 1\} $ for all $ j \in H, k \in C $.
+- $ L_j \ge 0 $ for all $ j \in H $.
+
+**Objective Function:**
+
+Minimize:
+
+$$
+\min Z = \sum_{j \in H} F_j y_j + \sum_{k \in C} \sum_{j \in H} D_k (d_{sj} + d_{jk}) c_{trans} x_{jk} + \sum_{j \in H} \alpha (L_j)^2
+$$
+
+**Constraints:**
+
+1. **Service Guarantee Constraint:**
+
+For each Customer $ k \in C $:
+
+$$
+\sum_{j \in H} x_{jk} = 1
+$$
+
+For each Hub $ j \in H $ and Customer $ k \in C $:
+
+$$
+x_{jk} \le y_j
+$$
+
+2. **Load Definition Constraint:**
+
+For each Hub $ j \in H $:
+
+$$
+L_j = \sum_{k \in C} D_k x_{jk}
+$$
+
+3. **Binary and Non-negativity Constraints:**
+
+$$
+y_j \in \{0, 1\}, \quad x_{jk} \in \{0, 1\}, \quad L_j \ge 0
+$$
+
+1. Optimization Problem Classification: NLP
+2. Problem Scale: Medium

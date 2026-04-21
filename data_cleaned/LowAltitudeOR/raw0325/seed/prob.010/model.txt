@@ -1,0 +1,172 @@
+### Step 1: Decision Variables Definition
+
+Let’s define the decision variables for the problem.
+
+Let’s denote:
+
+- $ y_k $: a binary variable indicating if Depot $ k $ is open.
+- $ z_{ik} $: a binary variable indicating if Village $ i $ is served by a drone from Depot $ k $.
+- $ v_i $: a binary variable indicating if Village $ i $ is served by a truck.
+- $ x_{ij} $: a binary variable indicating if the truck travels from node $ i $ to node $ j $.
+- $ u_i $: a continuous variable used for subtour elimination constraints (auxiliary variable).
+
+Thus, we have:
+
+- $ y_k \in \{0, 1\} $ for all $ k \in D $.
+- $ z_{ik} \in \{0, 1\} $ for all $ i \in V, k \in D $.
+- $ v_i \in \{0, 1\} $ for all $ i \in V $.
+- $ x_{ij} \in \{0, 1\} $ for all $ i, j \in N $.
+- $ u_i \ge 0 $ for all $ i \in N $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total cost, which consists of the fixed costs for opening depots, the drone operational costs, and the truck travel costs.
+
+The objective function is:
+
+$$
+\min \sum_{k \in D} F_k y_k + \sum_{i \in V} \sum_{k \in D} c_{ik}^{drone} z_{ik} + \sum_{i \in N} \sum_{j \in N} c_{ij}^{truck} x_{ij}
+$$
+
+Where:
+
+- $ F_k $ is the fixed cost of opening Depot $ k $.
+- $ c_{ik}^{drone} $ is the drone round-trip cost from Depot $ k $ to Village $ i $.
+- $ c_{ij}^{truck} $ is the truck travel cost from node $ i $ to node $ j $.
+
+### Step 3: Constraint Construction
+
+Now, let’s identify and translate the constraints into mathematical expressions.
+
+1. **Service Guarantee Constraint:**
+
+Every village must be served exactly once, either by a drone or by a truck.
+
+For each Village $ i \in V $:
+
+$$
+\sum_{k \in D} z_{ik} + v_i = 1
+$$
+
+2. **Drone Feasibility Constraint:**
+
+A village can only be served by a drone from Depot $ k $ if Depot $ k $ is open.
+
+For each Village $ i \in V $ and Depot $ k \in D $:
+
+$$
+z_{ik} \le y_k
+$$
+
+(Note: Pre-processing filters ensure $ z_{ik} = 0 $ if out of range).
+
+3. **Truck Routing Constraints:**
+
+The truck route must visit all villages assigned to the truck ($ v_i = 1 $).
+
+For each Village $ i \in V $:
+
+$$
+\sum_{j \in N} x_{ij} = v_i
+$$
+$$
+\sum_{j \in N} x_{ji} = v_i
+$$
+
+Truck routes must originate and terminate at open depots.
+
+For each Depot $ k \in D $:
+
+$$
+\sum_{j \in V} x_{kj} \le M y_k
+$$
+$$
+\sum_{j \in V} x_{kj} = \sum_{j \in V} x_{jk}
+$$
+
+4. **Subtour Elimination Constraint:**
+
+To ensure valid routing without isolated loops (using MTZ formulation).
+
+For all $ i, j \in V $:
+
+$$
+u_i - u_j + |N| x_{ij} \le |N| - 1
+$$
+
+5. **Binary Constraints:**
+
+The decision variables must be binary.
+
+$$
+y_k, z_{ik}, v_i, x_{ij} \in \{0, 1\}
+$$
+
+### Summary of the Mathematical Model
+
+The mathematical model for the problem is as follows:
+
+**Decision Variables:**
+
+- $ y_k \in \{0, 1\} $ for all $ k \in D $.
+- $ z_{ik} \in \{0, 1\} $ for all $ i \in V, k \in D $.
+- $ v_i \in \{0, 1\} $ for all $ i \in V $.
+- $ x_{ij} \in \{0, 1\} $ for all $ i, j \in N $.
+- $ u_i \ge 0 $ for all $ i \in N $.
+
+**Objective Function:**
+
+Minimize:
+
+$$
+\min \sum_{k \in D} F_k y_k + \sum_{i \in V} \sum_{k \in D} c_{ik}^{drone} z_{ik} + \sum_{i \in N} \sum_{j \in N} c_{ij}^{truck} x_{ij}
+$$
+
+**Constraints:**
+
+1. **Service Guarantee:**
+
+For each $ i \in V $:
+
+$$
+\sum_{k \in D} z_{ik} + v_i = 1
+$$
+
+2. **Drone Feasibility:**
+
+For each $ i \in V, k \in D $:
+
+$$
+z_{ik} \le y_k
+$$
+
+3. **Truck Routing:**
+
+For each $ i \in V $:
+
+$$
+\sum_{j \in N} x_{ij} = v_i
+$$
+
+For each $ k \in D $:
+
+$$
+\sum_{j \in V} x_{kj} \le M y_k
+$$
+
+4. **Subtour Elimination:**
+
+For all $ i, j \in V $:
+
+$$
+u_i - u_j + |N| x_{ij} \le |N| - 1
+$$
+
+5. **Binary Constraints:**
+
+$$
+y_k, z_{ik}, v_i, x_{ij} \in \{0, 1\}
+$$
+
+1. Optimization Problem Classification: MILP
+2. Problem Scale: Medium

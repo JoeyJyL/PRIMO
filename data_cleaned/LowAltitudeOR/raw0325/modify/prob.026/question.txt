@@ -1,0 +1,39 @@
+SkyDrone Logistics is designing a drone-based last-mile delivery network to serve urban customers from multiple Fulfillment Centers (FCs).
+**Goal:** Select which FCs to open and determine optimal drone routes to minimize the **Total Customer Waiting Time (Latency)** under a **Worst-Case Flight Time Scenario**.
+
+**Problem Setting:**
+- Drones are launched from opened FCs, serve multiple customers on a single trip, and return to an FC.
+- Each drone can carry multiple packages but has limited payload capacity.
+- Energy consumption depends nonlinearly on the drone's current load (heavier load = more energy).
+- Flight times are uncertain due to wind and weather conditions. We optimize for the worst-case scenario.
+
+**Fleet & Capacity:**
+- Number of drones available: **1** (reduced fleet due to maintenance constraints)
+- Drone payload capacity: 2.0 kg
+- Drone battery capacity: 500 Wh
+- Maximum FCs to open: 2
+- Each FC can host at most 2 drones.
+
+**Data - Candidate Fulfillment Centers:**
+- **FC1 (Central Hub):** Location (50, 50)
+- **FC2 (South Depot):** Location (20, 10)
+
+**Data - Customers:**
+| Customer | Location (X,Y) | Parcel Weight (kg) |
+|----------|----------------|-------------------|
+| C1       | (30, 40)       | 0.5               |
+| C2       | (60, 30)       | 0.4               |
+| C3       | (45, 70)       | 0.6               |
+| C4       | (70, 60)       | 0.5               |
+
+**Flight Time Data (in minutes):**
+- Flight time between any two points is calculated as Euclidean distance / drone speed.
+- Nominal flight times are subject to uncertainty (±20% deviation due to wind).
+
+**Energy Consumption Model:**
+- Energy consumption on arc (i,j) with load $l$: $E = k' \cdot (W + M + l)^{1.5} \cdot t_{ij}$
+- Where: $W$ = drone frame weight (1.5 kg), $M$ = battery weight (0.5 kg), $k'$ = energy coefficient (0.05)
+- Under worst-case uncertainty, flight times increase by the uncertainty margin (20%).
+
+**Objective:**
+Minimize total latency = sum of all customers' waiting times (time from dispatch until delivery).

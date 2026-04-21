@@ -1,0 +1,60 @@
+A logistics company plans to establish a drone-based middle-mile delivery network in a metropolitan area. The company operates from multiple warehouses and needs to strategically place vertiports (drone landing/charging stations) to maximize package delivery coverage while minimizing safety risks and noise nuisance.
+
+**Business Context:**
+Drones transport packages from warehouses to vertiports, where packages are temporarily stored for last-mile delivery by ground couriers or customer pickup. Each vertiport has limited capacity (number of landing pads) and can only be placed in zones with sufficient infrastructure space and unrestricted airspace.
+
+**Decision Problem:**
+Select optimal vertiport locations from candidate zones to:
+1. Maximize the total demand (weighted packages) covered
+2. Minimize safety risks (related to building heights and population density)
+3. Minimize noise nuisance (prefer locations near existing high-noise areas like highways)
+
+**Operational Constraints:**
+1. **Drone Range:** Drones can fly at most 30 km from warehouse to vertiport (one-way, with recharging at vertiport)
+2. **Last-Mile Distance:** Vertiport must be within 10 km of customer destination zone
+3. **Vertiport Budget:** Exactly 3 vertiports must be selected
+4. **Vertiport Capacity:** Each vertiport type has daily package handling capacity
+5. **Safety Distance:** Vertiports must be 2-12 km apart (minimum for collision avoidance, maximum for emergency landing options). The maximum emergency landing distance has been extended from 10 km to 12 km due to improved drone autonomous emergency landing capabilities.
+6. **Infrastructure Space:** Sufficient ground space must be available in the zone
+7. **Airspace:** Sufficient unrestricted airspace must be available (no-fly zones excluded)
+
+**Simplified Scenario Data:**
+
+*Warehouses (Origins):*
+- W1: Location (5, 5), serves as origin for all packages
+
+*Candidate Vertiport Zones (5 zones):*
+- Zone 1: Location (15, 15), Safety Score: 0.3, Noise Score: 0.2, Infrastructure: Medium (4 pads capacity)
+- Zone 2: Location (25, 10), Safety Score: 0.5, Noise Score: 0.1, Infrastructure: Large (16 pads capacity)
+- Zone 3: Location (20, 25), Safety Score: 0.2, Noise Score: 0.4, Infrastructure: Small (1 pad capacity)
+- Zone 4: Location (30, 20), Safety Score: 0.6, Noise Score: 0.3, Infrastructure: Medium (4 pads capacity)
+- Zone 5: Location (10, 25), Safety Score: 0.4, Noise Score: 0.5, Infrastructure: Medium (4 pads capacity)
+
+*Customer Demand Zones (6 zones):*
+- Customer Zone C1: Location (18, 18), Demand Weight: 50 packages
+- Customer Zone C2: Location (28, 12), Demand Weight: 80 packages
+- Customer Zone C3: Location (22, 28), Demand Weight: 60 packages
+- Customer Zone C4: Location (32, 22), Demand Weight: 70 packages
+- Customer Zone C5: Location (12, 28), Demand Weight: 40 packages
+- Customer Zone C6: Location (20, 15), Demand Weight: 90 packages
+
+*Vertiport Capacity by Type:*
+- Small (1 pad): 288 packages/day
+- Medium (4 pads): 1152 packages/day
+- Large (16 pads): 4608 packages/day
+
+*Distance Constraints:*
+- Maximum drone range (warehouse to vertiport): 30 km
+- Maximum last-mile distance (vertiport to customer): 10 km
+- Minimum safety distance between vertiports: 2 km
+- Maximum safety distance between vertiports: 12 km
+
+*Safety Score Components (normalized 0-1, higher = worse):*
+- Building height risk (tall buildings create collision hazards)
+- Population density risk (more people = higher casualty risk in emergencies)
+
+*Noise Score (normalized 0-1, higher = worse):*
+- Lower scores indicate areas already experiencing high noise (highways), making additional drone noise less impactful
+
+**Objective:**
+Select exactly 3 vertiport locations to maximize covered demand while minimizing total safety risk and noise nuisance, subject to all operational constraints.

@@ -1,0 +1,29 @@
+
+The Beijing Municipal Transport Commission is planning the first phase of the Urban Air Mobility (UAM) network using eVTOL aircraft.
+**Goal:** Select locations to build Vertiports to maximize the total served passenger demand, considering two distinct types of service:
+1. **Regular Shuttle (RS):** Fixed routes between key hubs. A route is active only if **BOTH** its origin and destination have an open Vertiport.
+2. **On-Demand Mobility (ODM):** Flexible taxi-like service within specific zones. A zone is served if **AT LEAST ONE** Vertiport is opened within or adjacent to it (simplification for coverage).
+
+**Constraints:**
+- **Budget:** Total construction cost cannot exceed **25M**.
+- **Candidate Sites:** 3 potential locations.
+
+**Candidate Vertiports (Cost & Location):**
+- **V1 (CBD - Guomao):** Cost 10M | High ODM potential.
+- **V2 (PEK - Capital Airport):** Cost 15M | Key endpoint for Shuttle.
+- **V3 (PKX - Daxing Airport):** Cost 12M | Key endpoint for Shuttle.
+
+**Demand Data:**
+*RS Routes (Requires both endpoints Open):*
+- **Route A (CBD <-> PEK):** V1 AND V2 must be open. Demand: **100** passengers/day.
+- **Route B (CBD <-> PKX):** V1 AND V3 must be open. Demand: **110** passengers/day.
+
+*ODM Zones (Requires specific site Open):*
+- **Zone 1 (CBD Area):** Covered if V1 open. Demand: **20**.
+- **Zone 2 (PEK Area):** Covered if V2 open. Demand: **30**.
+- **Zone 3 (PKX Area):** Covered if V3 open. Demand: **30**.
+
+**Analysis:**
+- Combination V1+V2: Cost 25M (Feasible). Covers Route A (100) + Zone 1(20) + Zone 2(30). Total = 150.
+- Combination V1+V3: Cost 22M (Feasible). Covers Route B (110) + Zone 1(20) + Zone 3(30). Total = 160.
+- Combination V2+V3: Cost 27M (Infeasible, exceeds budget).

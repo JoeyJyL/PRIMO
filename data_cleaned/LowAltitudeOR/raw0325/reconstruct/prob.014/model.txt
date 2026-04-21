@@ -1,0 +1,102 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+- $ y_i \in \{0, 1\} $: binary variable indicating if Skyport $ i $ is open, for all $ i \in F $.
+- $ x_{mn} \in \{0, 1\} $: binary variable indicating if demand pair $ (m, n) $ uses Air Taxi, for all $ (m, n) \in D $.
+
+The original ground-mode variable $ z_{mn} $ is **eliminated** via substitution: since $ x_{mn} + z_{mn} = 1 $, we have $ z_{mn} = 1 - x_{mn} $ and substitute directly into the objective.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize total system cost: facility cost + travel time cost + collision risk cost.
+
+**With variable elimination ($ z_{mn} = 1 - x_{mn} $):**
+
+$$
+\min Z = \underbrace{\sum_{i \in F} c_f \, y_i}_{\text{Facility}} + \underbrace{c_t \sum_{(m,n) \in D} \left[ \tau^a_{mn} \, x_{mn} + \tau^g_{mn} \, (1 - x_{mn}) \right]}_{\text{Travel Time}} + \underbrace{C_{risk} \cdot V_1 \cdot V_2 \cdot w_{D1,D2}}_{\text{Risk}}
+$$
+
+The travel time term simplifies to a constant plus a linear term in $ x $:
+
+$$
+c_t \sum_{(m,n)} \tau^g_{mn} + c_t \sum_{(m,n)} (\tau^a_{mn} - \tau^g_{mn}) \, x_{mn}
+$$
+
+**Product Linearization for Risk Term:**
+
+The risk term involves the product $ x_{D1} \cdot x_{D2} $ (both diagonal routes active). We introduce an auxiliary binary variable $ w_{D1,D2} $ and linearize using **McCormick envelope**:
+
+$$
+w_{D1,D2} \le x_{D1}
+$$
+$$
+w_{D1,D2} \le x_{D2}
+$$
+$$
+w_{D1,D2} \ge x_{D1} + x_{D2} - 1
+$$
+$$
+w_{D1,D2} \ge 0
+$$
+
+The risk cost becomes linear: $ C_{risk} \cdot V_1 \cdot V_2 \cdot w_{D1,D2} $.
+
+### Step 3: Constraint Construction
+
+1. **Skyport Availability Constraint:**
+
+Air Taxi can only be selected for demand $ (m, n) $ if the nearest Skyports for both origin and destination are open.
+
+For each $ (m, n) \in D $:
+
+$$
+x_{mn} \le y_{closest(m)}
+$$
+
+$$
+x_{mn} \le y_{closest(n)}
+$$
+
+2. **McCormick Linearization Constraints (for risk product):**
+
+$$
+w_{D1,D2} \le x_{D1}, \quad w_{D1,D2} \le x_{D2}
+$$
+$$
+w_{D1,D2} \ge x_{D1} + x_{D2} - 1
+$$
+
+3. **Binary and Domain Constraints:**
+
+$$
+y_i, x_{mn}, w_{D1,D2} \in \{0, 1\}
+$$
+
+### Summary of the Mathematical Model
+
+**Decision Variables:**
+
+- $ y_i \in \{0, 1\} $ for all $ i \in F $.
+- $ x_{mn} \in \{0, 1\} $ for all $ (m, n) \in D $.
+- $ w_{D1,D2} \in \{0, 1\} $: linearization variable for $ x_{D1} \cdot x_{D2} $.
+
+**Objective Function:**
+
+$$
+\min Z = \sum_{i} c_f \, y_i + c_t \sum_{(m,n)} \tau^g_{mn} + c_t \sum_{(m,n)} (\tau^a_{mn} - \tau^g_{mn}) \, x_{mn} + C_{risk} \cdot V_1 \cdot V_2 \cdot w_{D1,D2}
+$$
+
+**Constraints:**
+
+$$
+x_{mn} \le y_{closest(m)}, \quad x_{mn} \le y_{closest(n)} \quad \forall\, (m,n) \in D
+$$
+
+$$
+w_{D1,D2} \le x_{D1}, \quad w_{D1,D2} \le x_{D2}, \quad w_{D1,D2} \ge x_{D1} + x_{D2} - 1
+$$
+
+$$
+y_i, x_{mn}, w_{D1,D2} \in \{0, 1\}
+$$

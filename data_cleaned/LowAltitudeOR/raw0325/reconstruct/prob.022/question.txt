@@ -1,0 +1,51 @@
+SkyNet Logistics is designing a drone-based last-mile delivery network with intermediate charging stations.
+**Goal:** Determine the optimal number and locations of charging stations to connect all delivery points to the hub, balancing **infrastructure investment** (number of stations) and **service efficiency** (total path lengths).
+
+**Problem Setting:**
+- Drones depart from a central hub to deliver parcels to customers.
+- Due to limited battery range, drones may need to stop at intermediate charging stations to recharge before reaching distant customers.
+- Each charging station can cover delivery points within radius R (one-way range).
+- The drone's round-trip operating range is 2R (can fly distance 2R on a full charge).
+- An edge between two locations is feasible only if the distance is ≤ 2R.
+
+**Network Design Decisions:**
+1. Which candidate locations should be activated as charging stations?
+2. Which stations serve as terminal stations (directly covering delivery points)?
+3. What paths connect the hub to each terminal station?
+
+**Bi-Objective Optimization:**
+- Minimize total path lengths (service cost proxy)
+- Minimize number of active charging stations (infrastructure cost)
+- Combined objective: $Z = \theta \cdot f_1 + (1-\theta) \cdot f_2$ where $\theta \in [0,1]$
+
+**Data - Hub:**
+- **H1:** Location (0, 0)
+
+**Data - Candidate Charging Station Locations:**
+| Station | Location (X, Y) |
+|---------|-----------------|
+| S1      | (15, 10)        |
+| S2      | (25, 5)         |
+| S3      | (20, 25)        |
+| S4      | (35, 20)        |
+| S5      | (40, 35)        |
+| S6      | (10, 30)        |
+
+**Data - Delivery Points:**
+| Point | Location (X, Y) |
+|-------|-----------------|
+| D1    | (18, 8)         |
+| D2    | (30, 10)        |
+| D3    | (22, 28)        |
+| D4    | (38, 25)        |
+| D5    | (45, 38)        |
+| D6    | (12, 35)        |
+
+**Parameters:**
+- Drone one-way coverage radius R = 15 units
+- Drone round-trip range 2R = 30 units
+- Weight parameter θ = 0.5 (balanced objective)
+
+**Coverage Rule:**
+- A delivery point is covered if it is within distance R from an active terminal station.
+- All delivery points must be covered by at least one terminal station.

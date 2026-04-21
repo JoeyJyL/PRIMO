@@ -1,0 +1,141 @@
+### Step 1: Decision Variables Definition
+
+We reformulate the drone delivery routing problem using the **Linearizing Products (McCormick Envelope)** technique. The original model's energy consumption constraint contains bilinear products of continuous variables (battery weight $ q_r $, payload weight $ y_i^r $) with binary routing variables ($ x_{ij}^r $). We introduce McCormick auxiliary variables to exactly linearize these products.
+
+**Original variables (unchanged):**
+
+- $ x_{ij}^r \in \{0, 1\} $: binary, route $ r $ travels arc $ (i,j) $.
+- $ u_r \in \{0, 1\} $: binary, route $ r $ is used.
+- $ y_i^r \geq 0 $: payload weight leaving location $ i $ on route $ r $.
+- $ q_r \geq 0 $: battery weight for route $ r $.
+- $ z_r \geq 0 $: energy consumed on route $ r $.
+- $ t_i^r \geq 0 $: time when location $ i $ is visited on route $ r $.
+- $ a_r \geq 0 $: arrival time at depot after route $ r $.
+- $ n \in \mathbb{Z}^+ $: number of drones to purchase.
+
+**McCormick auxiliary variables (new):**
+
+- $ w^q_{ijr} \geq 0 $: linearization of $ q_r \cdot x_{ij}^r $ for all arcs $ (i,j), i \neq j $, route $ r $.
+- $ w^{yA}_{ijr} \geq 0 $: linearization of $ y_i^r \cdot x_{ij}^r $ for all arcs $ (i,j), i \neq j $, route $ r $.
+- $ w^{yB}_{ijr} \geq 0 $: linearization of $ y_j^r \cdot x_{ij}^r $ for arcs $ (i,j) $ where $ j \neq 0 $, route $ r $.
+
+### Step 2: Objective Function Construction
+
+The objective is unchanged:
+
+$$
+\min F \cdot n + \varepsilon \sum_{r \in R} z_r
+$$
+
+### Step 3: Constraint Construction
+
+**Constraints 1–7 (unchanged from original):**
+
+1. $ \sum_{r \in R} \sum_{j \in N, j \neq i} x_{ij}^r = 1 \quad \forall i \in N_0 $ (each customer visited once)
+2. $ \sum_{j \neq i} x_{ij}^r = \sum_{j \neq i} x_{ji}^r \quad \forall i \in N, r \in R $ (flow conservation)
+3. $ \sum_{j \in N_0} x_{0j}^r = u_r \quad \forall r $ (route start)
+4. $ \sum_{i \in N_0} x_{i0}^r = u_r \quad \forall r $ (route end)
+5. $ y_0^r = \sum_{j \in N_0} D_j x_{0j}^r \quad \forall r $ (payload tracking)
+6. $ y_i^r \geq y_j^r + D_j x_{ij}^r - K(1-x_{ij}^r) \quad \forall r, i,j \in N_0, i \neq j $ (payload decrease)
+7. $ q_r + y_i^r \leq Q \cdot u_r \quad \forall i \in N, r $ (capacity)
+
+**Constraint 8: McCormick Envelope for $ w^q_{ijr} = q_r \cdot x_{ij}^r $:**
+
+$$
+w^q_{ijr} \leq Q \cdot x_{ij}^r \quad \forall (i,j), r
+$$
+$$
+w^q_{ijr} \leq q_r \quad \forall (i,j), r
+$$
+$$
+w^q_{ijr} \geq q_r - Q(1 - x_{ij}^r) \quad \forall (i,j), r
+$$
+$$
+w^q_{ijr} \geq 0 \quad \forall (i,j), r
+$$
+
+**Constraint 9: McCormick Envelope for $ w^{yA}_{ijr} = y_i^r \cdot x_{ij}^r $:**
+
+$$
+w^{yA}_{ijr} \leq Q \cdot x_{ij}^r \quad \forall (i,j), r
+$$
+$$
+w^{yA}_{ijr} \leq y_i^r \quad \forall (i,j), r
+$$
+$$
+w^{yA}_{ijr} \geq y_i^r - Q(1 - x_{ij}^r) \quad \forall (i,j), r
+$$
+$$
+w^{yA}_{ijr} \geq 0 \quad \forall (i,j), r
+$$
+
+**Constraint 10: McCormick Envelope for $ w^{yB}_{ijr} = y_j^r \cdot x_{ij}^r $ ($ j \neq 0 $):**
+
+$$
+w^{yB}_{ijr} \leq Q \cdot x_{ij}^r \quad \forall (i,j), j \neq 0, r
+$$
+$$
+w^{yB}_{ijr} \leq y_j^r \quad \forall (i,j), j \neq 0, r
+$$
+$$
+w^{yB}_{ijr} \geq y_j^r - Q(1 - x_{ij}^r) \quad \forall (i,j), j \neq 0, r
+$$
+$$
+w^{yB}_{ijr} \geq 0 \quad \forall (i,j), j \neq 0, r
+$$
+
+**Constraint 11: Linearized Energy Consumption:**
+
+For each route $ r \in R $:
+
+$$
+z_r = \sum_{i \in N} \sum_{j \in N, j \neq i} \tau_{ij} \left[ \alpha \cdot w^q_{ijr} + \frac{\alpha}{2} w^{yA}_{ijr} + \frac{\alpha}{2} w^{yB}_{ijr} \cdot \mathbb{1}_{j \neq 0} + \beta \cdot x_{ij}^r \right]
+$$
+
+where $ \tau_{ij} = d_{ij}/v + \tau $ is the travel-plus-service time for arc $ (i,j) $.
+
+When $ j = 0 $ (returning to depot, arrival payload is zero):
+
+$$
+\text{term}_{i0r} = \tau_{i0} \left[ \alpha \cdot w^q_{i0r} + \frac{\alpha}{2} w^{yA}_{i0r} + \beta \cdot x_{i0}^r \right]
+$$
+
+When $ j \neq 0 $:
+
+$$
+\text{term}_{ijr} = \tau_{ij} \left[ \alpha \cdot w^q_{ijr} + \frac{\alpha}{2} (w^{yA}_{ijr} + w^{yB}_{ijr}) + \beta \cdot x_{ij}^r \right]
+$$
+
+**Constraints 12–17 (unchanged):**
+
+12. $ \xi \cdot q_r \geq z_r \quad \forall r $ (battery energy)
+13. $ t_j^r \geq t_i^r + \tau_{ij} - K(1-x_{ij}^r) \quad \forall r, i \in N, j \in N_0, i \neq j $ (time progression)
+14. $ a_r \geq t_i^r + \tau_{i0} - K(1-x_{i0}^r) \quad \forall r, i \in N_0 $ (arrival time)
+15. $ a_r \leq T + K(1-u_r) \quad \forall r $ (time limit)
+16. $ n \geq \sum_{r \in R} u_r $ (drone count)
+17. $ n \leq M $ (drone availability)
+
+### Summary of the Mathematical Model
+
+**Sets:**
+
+- $ N = \{0,1,2,3,4,5\} $: all locations (0 = depot).
+- $ N_0 = \{1,2,3,4,5\} $: customers.
+- $ R = \{0,1,2,3,4\} $: routes.
+
+**Parameters:**
+
+- $ d_{ij} $: distance. $ D_i $: demand. $ F=500, Q=3.0, v=6, \tau=60 $.
+- $ \alpha=0.217, \beta=0.185, \xi=650, \varepsilon=0.1, T=600, M=5, K=10000 $.
+
+**Decision Variables:**
+
+- Original: $ x_{ij}^r, u_r, y_i^r, q_r, z_r, t_i^r, a_r, n $.
+- McCormick: $ w^q_{ijr}, w^{yA}_{ijr}, w^{yB}_{ijr} $.
+
+**Objective:** $ \min F \cdot n + \varepsilon \sum_r z_r $
+
+**Constraints:** C1–C7 (routing, payload, capacity), C8–C10 (McCormick envelopes), C11 (linearized energy), C12–C17 (battery, time, drones).
+
+1. Optimization Problem Classification: MILP
+2. Problem Scale: Small

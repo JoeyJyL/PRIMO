@@ -1,0 +1,113 @@
+### Step 1: Decision Variables Definition
+
+Let’s define the decision variables for the problem.
+
+Let’s denote:
+
+- $ x_j $: a binary variable indicating if vertiport $ j $ is opened.
+- $ y_i $: a binary variable indicating if demand zone $ i $ is covered.
+
+Thus, we have:
+
+- $ x_j \in \{0, 1\} $ for all $ j \in J $.
+- $ y_i \in \{0, 1\} $ for all $ i \in I $.
+
+### Step 2: Objective Function Construction
+
+The goal is to maximize the weighted score, which balances covering demand against construction costs and noise impact.
+
+The objective function is:
+
+$$
+\text{Maximize } Z = W_{cov} \sum_{i \in I} D_i y_i - W_{cost} \sum_{j \in J} C_j x_j - W_{noise} \sum_{j \in J} N_j x_j
+$$
+
+Where:
+
+- $ W_{cov}, W_{cost}, W_{noise} $ are the weights for coverage, cost, and noise objectives respectively.
+- $ D_i $ is the demand of zone $ i $.
+- $ C_j $ is the construction cost of vertiport $ j $.
+- $ N_j $ is the noise impact factor of vertiport $ j $.
+- $ I $ is the set of demand zones and $ J $ is the set of candidate vertiports.
+
+### Step 3: Constraint Construction
+
+Now, let’s identify and translate the constraints into mathematical expressions.
+
+1. **Budget (Count) Constraint:**
+
+The number of opened vertiports must not exceed the maximum limit $ P $.
+
+$$
+\sum_{j \in J} x_j \le P
+$$
+
+Where:
+
+- $ P $ is the maximum number of vertiports to open.
+
+2. **Coverage Logic Constraint:**
+
+A zone $ i $ is considered covered ($ y_i = 1 $) only if at least one vertiport $ j $ capable of covering it (where $ a_{ij} = 1 $) is opened.
+
+For each zone $ i \in I $:
+
+$$
+y_i \le \sum_{j \in J} a_{ij} x_j
+$$
+
+Where:
+
+- $ a_{ij} $ is a binary parameter equal to 1 if vertiport $ j $ covers zone $ i $, and 0 otherwise.
+
+3. **Binary Constraints:**
+
+The decision variables must be binary.
+
+For all $ j \in J $ and $ i \in I $:
+
+$$
+x_j \in \{0, 1\}, \quad y_i \in \{0, 1\}
+$$
+
+### Summary of the Mathematical Model
+
+The mathematical model for the problem is as follows:
+
+**Decision Variables:**
+
+- $ x_j \in \{0, 1\} $ for all $ j \in J $.
+- $ y_i \in \{0, 1\} $ for all $ i \in I $.
+
+**Objective Function:**
+
+Maximize:
+
+$$
+Z = W_{cov} \sum_{i \in I} D_i y_i - W_{cost} \sum_{j \in J} C_j x_j - W_{noise} \sum_{j \in J} N_j x_j
+$$
+
+**Constraints:**
+
+1. **Budget (Count) Constraint:**
+
+$$
+\sum_{j \in J} x_j \le P
+$$
+
+2. **Coverage Logic Constraint:**
+
+For each $ i \in I $:
+
+$$
+y_i \le \sum_{j \in J} a_{ij} x_j
+$$
+
+3. **Binary Constraints:**
+
+$$
+x_j \in \{0, 1\}, \quad y_i \in \{0, 1\}
+$$
+
+1. Optimization Problem Classification: ILP
+2. Problem Scale: Medium

@@ -1,0 +1,66 @@
+<think>
+Identifying the mathematical model for the Time-Dependent Multiple Truck-Drone Routing Problem (TD-MTDRP).
+
+### Decision Variables
+- $ \theta_r \in \{0,1\} $: 1 if truck-drone route $ r \in \Omega $ is selected
+
+### Objective Function
+Minimize total duration (travel + waiting time) of all routes:
+$$
+\min \sum_{r \in \Omega} (t_r + w_r) \theta_r
+$$
+
+### Constraints
+1. Each customer visited exactly once (truck or drone):
+$$
+\sum_{r \in \Omega} (\alpha_{ir} + \beta_{ir}) \theta_r = 1, \quad \forall i \in N
+$$
+
+2. Fleet size limit:
+$$
+\sum_{r \in \Omega} \theta_r \leq |K|
+$$
+
+3. Binary:
+$$
+\theta_r \in \{0,1\}, \quad r \in \Omega
+$$
+
+### Valid Inequalities (Subset-Row Inequalities, modified for TD-MTDRP)
+For subset $ S \subseteq N $, $ |S|=3 $:
+$$
+\sum_{r \in \Omega'} \xi_{rS} \theta_r \leq 1, \quad \forall S \in \Gamma
+$$
+where $ \xi_{rS} = 1 $ if route $ r $ visits at least 2 customers in $ S $.
+
+### Route Feasibility Conditions
+A truck-drone route $ r = (v_0, v_1(H_1), \ldots, v_i(H_i)) $ is feasible if:
+- Capacity: $ \sum_{i \in \text{truck nodes}} b_i + \sum_{j \in \text{drone nodes}} b_j \leq Q $
+- Drone battery: $ 2 t_{v_i, j} \leq B $, for each drone node $ j \in H_i $
+- Drone payload: $ g_j \leq D $, for each drone node $ j $
+- Time windows: service starts within $ [e_i, l_i] $ for all nodes
+- Max drones: $ |H_i| \leq m $ at each truck node $ v_i $
+
+### Ready Time Recursion
+$$
+\rho_i^t = \delta_{i-1}^t + \tau_{(i-1)i}(\delta_{i-1}^t)
+$$
+$$
+\rho_{ij}^d = \rho_i^t + t_{ij}, \quad \forall h_{ij} \in H_i
+$$
+$$
+\delta_{ij}^d = \rho_j^d + s_j^d, \quad \forall h_{ij} \in H_i
+$$
+$$
+\delta_i^t = \max\left(\rho_i^t + s_i^t,\ \max_{h_{ij} \in H_i}(\delta_{ij}^d + t_{ji})\right)
+$$
+
+### Route Cost
+$$
+t_r + w_r = \delta_{\text{end}}^t - 0 \quad \text{(total duration from depot departure to return)}
+$$
+</think>
+
+1. Optimization Problem Classification: MILP / Set-Partitioning Model (SPM) with column generation (Branch-Price-and-Cut)
+2. Problem Size: Medium-Large (paper solves up to 50 customers); simplified instance has 6 customers, 1 truck, 2 drones
+3. Solution Method: Branch-Price-and-Cut (BPC) with labeling algorithm for pricing subproblem; exact MILP for small instance

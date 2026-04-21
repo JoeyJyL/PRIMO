@@ -1,0 +1,37 @@
+SkyLondon is planning the deployment of Vertiports for air taxi services.
+**Core Challenge:** Vertiports have limited processing capacity (landing pads/gates). As passenger demand at a specific vertiport increases, **Queuing Delays** rise non-linearly.
+**Goal:** Select Vertiport locations from candidates to minimize the Total System Cost:
+   - **Fixed Cost:** Construction cost of opening a vertiport.
+   - **Access Cost:** Passengers travel distance to their assigned vertiport.
+   - **Congestion Cost:** A penalty representing queuing delays.
+     $$ \text{Congestion Cost}_j = 0.05 \times (\text{Total Load}_j)^2 $$
+     *(Note: This quadratic term captures the exponential nature of queuing delays).*
+
+**Parameters:**
+- **Max Vertiports:** No strict limit, driven by cost trade-off.
+- **Access Cost:** $1.0 per km per passenger.
+- **Vertiport Capacity:** Due to limited landing pad infrastructure, each vertiport can handle at most **200** passengers. $$ L_j \le 200, \quad \forall j \in J $$
+
+**Locations & Demand:**
+*Candidate Vertiports ($J$):*
+- **V1 (City Center):** (5, 5) | Fixed Cost: **2000** (Expensive land).
+- **V2 (West End):** (2, 5)   | Fixed Cost: **1000**.
+- **V3 (East End):** (8, 5)   | Fixed Cost: **1000**.
+
+*Passenger Zones ($I$):*
+- **Z1:** (2, 8) | Demand: 100 | Near V2.
+- **Z2:** (5, 8) | Demand: 120 | Near V1.
+- **Z3:** (8, 8) | Demand: 100 | Near V3.
+- **Z4:** (5, 2) | Demand: 80  | Near V1.
+
+**Analysis:**
+- **Scenario A (Centralize):** Open only V1.
+  - Load = 400 > 200 capacity. **Infeasible.**
+- **Scenario B (Distribute V2+V3):** Open V2, V3.
+  - Z1→V2(100), Z3→V3(100). Z2(120)+Z4(80) must split: but both assigned to one of V2/V3 could exceed 200.
+  - If Z2→V3, Z4→V2: V2=180, V3=220 > 200. **Infeasible.**
+  - Need to open V1 for extra capacity.
+- **Scenario C (All three):** Open V1, V2, V3.
+  - Z1→V2(100), Z3→V3(100), Z2→V1(120), Z4→V1(80): V1=200, V2=100, V3=100. All ≤ 200. **Feasible.**
+  - Fixed=4000, Access=1200, Congestion=0.05*(40000+10000+10000)=3000. Total=8200.
+- The model must find the balance under the capacity constraint.

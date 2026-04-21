@@ -1,0 +1,112 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+**Sets:**
+- $S$: Set of demand scenarios (Normal, Peak).
+- $B = \{0, 1, \ldots, B_{max}\}$: Set of batch indices, where $B_{max}$ is the maximum possible number of batches (equal to the maximum number of drones across all scenarios).
+
+**Parameters:**
+- $F_{fixed}$: Fixed construction cost of the charging station.
+- $C_{pile}$: Cost per charging pile.
+- $C_{wait}$: Queuing penalty per hour of waiting.
+- $T_{charge}$: Charging duration (1 hour per drone).
+- $Prob_s$: Probability of scenario $s$.
+- $N_s$: Number of drones arriving in scenario $s$.
+- $MaxCap$: Maximum possible number of piles.
+
+**Decision Variables:**
+
+- $y \in \{0, 1\}$: Binary variable indicating if the charging station is opened.
+- $k \in \mathbb{Z}_{\geq 0}$: Number of charging piles (capacity).
+
+**Auxiliary Variables (Batch Decomposition):**
+
+- $g_{sb} \geq 0$: Continuous auxiliary variable representing the number of drones served in batch $b$ under scenario $s$. Each drone in batch $b$ waits $b \cdot T_{charge}$ hours before charging begins.
+- $W_s \geq 0$: Total waiting cost in scenario $s$.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total expected cost:
+
+$$
+\min Z = (F_{fixed} \cdot y + C_{pile} \cdot k) + \sum_{s \in S} Prob_s \cdot W_s
+$$
+
+### Step 3: Constraint Construction
+
+1. **Station Opening Logic:**
+
+The capacity can be positive only if the station is opened, and an open station must have at least one pile:
+
+$$
+k \leq MaxCap \cdot y
+$$
+$$
+k \geq y
+$$
+
+2. **Batch Demand Fulfillment:**
+
+All drones in each scenario must be assigned to exactly one batch. The total drones across all batches equals the scenario demand:
+
+For each scenario $s \in S$:
+
+$$
+\sum_{b \in B} g_{sb} = N_s
+$$
+
+3. **Batch Capacity Constraint:**
+
+Each batch can serve at most $k$ drones (the number of charging piles). This links the auxiliary batch variables to the capacity decision:
+
+For each scenario $s \in S$ and batch $b \in B$:
+
+$$
+g_{sb} \leq k
+$$
+
+4. **Wait Cost Calculation via Batch Decomposition:**
+
+Each drone assigned to batch $b$ waits $b \cdot T_{charge}$ hours. The total wait cost in scenario $s$ is the sum of wait times for all drones across all batches:
+
+For each scenario $s \in S$:
+
+$$
+W_s = C_{wait} \cdot \sum_{b \in B} b \cdot T_{charge} \cdot g_{sb}
+$$
+
+Note: Since the objective minimizes cost and later batches incur higher wait penalties, the optimizer naturally assigns drones to earlier batches first (batch 0 up to $k$, then batch 1 up to $k$, etc.), reproducing the correct queuing behavior.
+
+5. **Non-negativity and Domain Constraints:**
+
+$$
+y \in \{0, 1\}, \quad k \in \mathbb{Z}_{\geq 0}, \quad g_{sb} \geq 0, \quad W_s \geq 0
+$$
+
+### Summary of the Mathematical Model
+
+**Decision Variables:**
+- $y \in \{0, 1\}$: station opening indicator.
+- $k \in \mathbb{Z}_{\geq 0}$: number of charging piles.
+
+**Auxiliary Variables:**
+- $g_{sb} \geq 0$: drones served in batch $b$ under scenario $s$.
+- $W_s \geq 0$: total waiting cost in scenario $s$.
+
+**Objective Function:**
+
+$$
+\min Z = (F_{fixed} \cdot y + C_{pile} \cdot k) + \sum_{s \in S} Prob_s \cdot W_s
+$$
+
+**Constraints:**
+
+1. Station opening logic: $k \leq MaxCap \cdot y$, $k \geq y$.
+2. Batch demand fulfillment: $\sum_b g_{sb} = N_s$.
+3. Batch capacity: $g_{sb} \leq k$.
+4. Wait cost via batch decomposition: $W_s = C_{wait} \cdot \sum_b b \cdot T_{charge} \cdot g_{sb}$.
+5. Non-negativity and domain constraints.
+
+1. Optimization Problem Classification: MILP
+2. Problem Scale: Small

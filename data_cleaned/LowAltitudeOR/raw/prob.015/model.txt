@@ -1,0 +1,127 @@
+### Step 1: Decision Variables Definition
+
+Let’s define the decision variables for the problem.
+
+Let’s denote:
+
+- $ y_j $: a binary variable indicating if vertiport $ j $ is open.
+- $ x_{ij} $: a binary variable indicating if zone $ i $ is assigned to vertiport $ j $.
+- $ L_j $: a continuous variable representing the total passenger load at vertiport $ j $.
+
+Thus, we have:
+
+- $ y_j \in \{0, 1\} $ for all $ j \in J $.
+- $ x_{ij} \in \{0, 1\} $ for all $ i \in I $ and $ j \in J $.
+- $ L_j \ge 0 $ for all $ j \in J $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total cost, which consists of the fixed costs for opening vertiports, the access costs for passengers, and a quadratic penalty for congestion at the vertiports.
+
+The objective function is:
+
+$$
+\min Z = \sum_{j \in J} F_j y_j + \sum_{i \in I} \sum_{j \in J} D_i C_{ij} x_{ij} + \sum_{j \in J} \alpha (L_j)^2
+$$
+
+Where:
+
+- $ F_j $ is the fixed cost of vertiport $ j $.
+- $ D_i $ is the demand of zone $ i $.
+- $ C_{ij} $ is the access cost from zone $ i $ to vertiport $ j $.
+- $ \alpha $ is the congestion coefficient.
+
+### Step 3: Constraint Construction
+
+Now, let’s identify and translate the constraints into mathematical expressions.
+
+1. **Single Assignment Constraint:**
+
+Each zone $ i $ must be assigned to exactly one vertiport.
+
+For each zone $ i \in I $:
+
+$$
+\sum_{j \in J} x_{ij} = 1
+$$
+
+2. **Vertiport Availability Constraint:**
+
+A zone $ i $ can only be assigned to vertiport $ j $ if vertiport $ j $ is open.
+
+For each zone $ i \in I $ and vertiport $ j \in J $:
+
+$$
+x_{ij} \le y_j
+$$
+
+3. **Load Definition Constraint:**
+
+The load at vertiport $ j $ is the sum of demand from all zones assigned to it.
+
+For each vertiport $ j \in J $:
+
+$$
+L_j = \sum_{i \in I} D_i x_{ij}
+$$
+
+4. **Binary and Non-negativity Constraints:**
+
+The decision variables must adhere to their respective domains.
+
+$$
+x_{ij} \in \{0, 1\}, \quad y_j \in \{0, 1\}, \quad L_j \ge 0
+$$
+
+### Summary of the Mathematical Model
+
+The mathematical model for the problem is as follows:
+
+**Decision Variables:**
+
+- $ x_{ij} \in \{0, 1\} $ for all $ i \in I, j \in J $.
+- $ y_j \in \{0, 1\} $ for all $ j \in J $.
+- $ L_j \ge 0 $ for all $ j \in J $.
+
+**Objective Function:**
+
+Minimize:
+
+$$
+\min Z = \sum_{j \in J} F_j y_j + \sum_{i \in I} \sum_{j \in J} D_i C_{ij} x_{ij} + \sum_{j \in J} \alpha (L_j)^2
+$$
+
+**Constraints:**
+
+1. **Single Assignment Constraint:**
+
+For each $ i \in I $:
+
+$$
+\sum_{j \in J} x_{ij} = 1
+$$
+
+2. **Vertiport Availability Constraint:**
+
+For each $ i \in I, j \in J $:
+
+$$
+x_{ij} \le y_j
+$$
+
+3. **Load Definition Constraint:**
+
+For each $ j \in J $:
+
+$$
+L_j = \sum_{i \in I} D_i x_{ij}
+$$
+
+4. **Binary and Non-negativity Constraints:**
+
+$$
+x_{ij} \in \{0, 1\}, \quad y_j \in \{0, 1\}, \quad L_j \ge 0
+$$
+
+1. Optimization Problem Classification: NLP
+2. Problem Scale: Medium

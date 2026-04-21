@@ -1,0 +1,91 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+Let's denote:
+
+- $ y_j $: a binary variable indicating whether hub $ j $ is built (1) or not (0).
+- $ x_{jis} $: a binary variable indicating whether demand point $ i $ is assigned to hub $ j $ in scenario $ s $ (1) or not (0).
+- $ \phi_s $: a continuous auxiliary variable representing the total operational cost in scenario $ s $.
+- $ Z $: a continuous auxiliary variable representing the worst-case operational cost across all scenarios.
+
+Thus, we have:
+
+- $ y_j \in \{0, 1\} $ for all $ j \in H $.
+- $ x_{jis} \in \{0, 1\} $ for all $ j \in H $, $ i \in C $, $ s \in \mathcal{S} $, where $ d(j, i) \le r $.
+- $ \phi_s \ge 0 $ for all $ s \in \mathcal{S} $.
+- $ Z \ge 0 $.
+
+Where:
+- $ H $ is the set of candidate hubs.
+- $ C $ is the set of demand points.
+- $ \mathcal{S} $ is the set of scenarios.
+- $ r $ is the maximum service radius.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the sum of construction cost and worst-case operational cost.
+
+The objective function is:
+
+$$
+\text{Minimize } \sum_{j \in H} f_j y_j + Z
+$$
+
+Where:
+
+- $ f_j $ is the construction cost of hub $ j $.
+
+### Step 3: Constraint Construction
+
+1. **Scenario Cost Definition (Auxiliary Variable):**
+
+The auxiliary variable $ \phi_s $ captures the total operational cost in scenario $ s $.
+
+For each scenario $ s \in \mathcal{S} $:
+
+$$
+\phi_s = \sum_{j \in H} \sum_{i \in C} q_{is} \cdot d_{ji} \cdot c_t \cdot x_{jis}
+$$
+
+Where:
+- $ q_{is} $ is the demand of point $ i $ in scenario $ s $.
+- $ d_{ji} $ is the distance from hub $ j $ to point $ i $.
+- $ c_t $ is the unit transportation cost.
+
+2. **Worst-Case Cost Definition (Min-Max Linearization):**
+
+The auxiliary variable $ Z $ must be at least as large as every scenario's operational cost.
+
+For each scenario $ s \in \mathcal{S} $:
+
+$$
+Z \ge \phi_s
+$$
+
+3. **Mandatory Coverage Constraint:**
+
+In every scenario, every demand point must be assigned to exactly one active hub within range.
+
+For each $ s \in \mathcal{S} $, $ i \in C $:
+
+$$
+\sum_{j \in H_i} x_{jis} = 1
+$$
+
+Where:
+- $ H_i = \{j \in H : d(j, i) \le r\} $ is the set of hubs within service range of point $ i $.
+
+4. **Big-M Aggregate Capacity Constraint:**
+
+Instead of individual linking constraints $ x_{jis} \le y_j $, we use an aggregated Big-M capacity constraint. If hub $ j $ is not built, no demand point can be assigned to it across all points in any scenario.
+
+For each $ j \in H $, $ s \in \mathcal{S} $:
+
+$$
+\sum_{i \in C_j} x_{jis} \le M_j \cdot y_j
+$$
+
+Where:
+- $ C_j = \{i \in C : d(j, i) \le r\} $ is the set of demand points reachable from hub $ j $.
+- $ M_j = |C_j| $ is the Big-M value, equal to the number of reachable demand points from hub $ j $.

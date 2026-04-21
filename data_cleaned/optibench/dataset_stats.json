@@ -1,0 +1,10 @@
+{
+  "total_samples": 403,
+  "train_samples": 322,
+  "test_samples": 81,
+  "datasets_used": [
+    "optibench"
+  ],
+  "dataset_name": "optibench",
+  "processed_at": "2025-10-03T20:13:25.665840+00:00"
+}

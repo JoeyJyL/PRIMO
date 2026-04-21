@@ -1,0 +1,109 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the two-stage stochastic drone relief network.
+
+Let's denote:
+
+- $ x_{k} $: a binary variable indicating whether facility $ k $ is opened (1) or not (0).
+- $ y_{dk} $: a binary variable indicating whether drone $ d $ is assigned to facility $ k $ (1) or not (0).
+- $ z_{idk} $: a binary variable indicating whether drone $ d $ (assigned to $ k $) is scheduled to visit site $ i $ (1) or not (0).
+- $ v_{k} $: the inventory quantity prepositioned at facility $ k $.
+- $ q_{idk}^{\xi} $: the items delivered by drone $ d $ from facility $ k $ to site $ i $ in scenario $ \xi $.
+- $ u_{i}^{\xi} $: the unsatisfied demand at site $ i $ in scenario $ \xi $.
+- $ r_{k}^{\xi} $: the unused inventory at facility $ k $ in scenario $ \xi $.
+
+Note: The intermediate flow variable $ w_{ik}^{\xi} $ in the original formulation has been **eliminated by substitution**. All references to $ w_{ik}^{\xi} $ are replaced by $ \sum_{d \in D} q_{idk}^{\xi} $.
+
+Thus, we have:
+
+- $ x_{k}, y_{dk}, z_{idk} \in \{0, 1\} $ for all $ k \in K, d \in D, i \in I $.
+- $ v_{k} \geq 0 $ for all $ k \in K $.
+- $ q_{idk}^{\xi}, u_{i}^{\xi}, r_{k}^{\xi} \geq 0 $ for all $ i \in I, k \in K, d \in D, \xi \in \Xi $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total cost, which includes the first-stage costs and the expected second-stage recourse costs.
+
+The objective function is:
+
+$$
+\min \sum_{k \in K} (C_{OPEN} x_k + C_{INV} v_k) + \sum_{i \in I}\sum_{d \in D}\sum_{k \in K} C_{MANA} z_{idk} + \sum_{\xi \in \Xi} p_{\xi} \left( \sum_{i,d,k} C_{DELI} q_{idk}^{\xi} + \sum_i C_{UNS} u_i^{\xi} + \sum_k C_{UNU} r_k^{\xi} \right)
+$$
+
+### Step 3: Constraint Construction
+
+1. **Assignment Logic Constraints (with Big-M Aggregation):**
+
+A drone must be assigned to an open facility, each drone can be assigned to at most one facility.
+
+For all $ d \in D, k \in K $:
+
+$$
+y_{dk} \leq x_k
+$$
+
+$$
+\sum_{k \in K} y_{dk} \leq 1
+$$
+
+Instead of individual linking $ z_{idk} \leq y_{dk} $ for each site, we use an **aggregate Big-M constraint** per drone-facility pair:
+
+For all $ d \in D, k \in K $:
+
+$$
+\sum_{i \in I} z_{idk} \leq |I| \cdot y_{dk}
+$$
+
+Where $ |I| $ is the number of demand sites (the Big-M value).
+
+2. **Coverage Constraint:**
+
+Each demand site $ i $ must be visited by at least one drone.
+
+For each site $ i \in I $:
+
+$$
+\sum_{d \in D}\sum_{k \in K} z_{idk} \geq 1
+$$
+
+3. **Range Constraint:**
+
+The total distance traveled by drone $ d $ from facility $ k $ must not exceed its maximum range.
+
+For all $ d \in D, k \in K $:
+
+$$
+\sum_{i \in I} dist(k, i) \cdot z_{idk} \leq B_{MAX} \cdot y_{dk}
+$$
+
+4. **Inventory Capacity Constraint:**
+
+For each facility $ k \in K $:
+
+$$
+v_k \leq W_{cap} \cdot x_k
+$$
+
+5. **Demand Balance Constraint (with $ w $ eliminated by substitution):**
+
+For all $ i \in I, \xi \in \Xi $:
+
+$$
+\sum_{k \in K} \sum_{d \in D} q_{idk}^{\xi} + u_{i}^{\xi} = Demand_{i}^{\xi}
+$$
+
+6. **Supply Balance Constraint (with $ w $ eliminated by substitution):**
+
+For all $ k \in K, \xi \in \Xi $:
+
+$$
+\sum_{i \in I} \sum_{d \in D} q_{idk}^{\xi} + r_{k}^{\xi} = v_k
+$$
+
+7. **Payload Limit Constraint:**
+
+For all $ i \in I, d \in D, k \in K, \xi \in \Xi $:
+
+$$
+q_{idk}^{\xi} \leq L_{MAX} \cdot z_{idk}
+$$

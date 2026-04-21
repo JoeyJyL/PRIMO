@@ -1,0 +1,29 @@
+"CloudWing Logistics" is designing a drone delivery network using a bi-level planning approach.
+**Problem Structure:**
+- **Upper Level (Leader - Network Planner):** Decides which air links to open (Topology).
+  - Objective: Minimize **Total Network Length** (Infrastructure/Management Effort).
+  - Constraint: Must ensure connectivity for all demands.
+- **Lower Level (Follower - Operator):** Routes drones on open links.
+  - Objective: Minimize **Total Operational Cost** (Distance $\times$ Flow).
+
+**Scenario Data:**
+- **Nodes:**
+  - **S (Supply):** (0, 0)
+  - **D1 (Demand 1):** (10, 0) | Demand: 10 pkgs
+  - **D2 (Demand 2):** (10, 10) | Demand: 10 pkgs
+- **Candidate Links (One-way):**
+  - **L1 (S -> D1):** Dist 10.0
+  - **L2 (S -> D2):** Dist 14.14 (Direct diagonal)
+  - **L3 (D1 -> D2):** Dist 10.0 (Transit link)
+
+**Link Capacity Constraint:**
+Due to air traffic control regulations in each corridor, each link has a maximum throughput capacity of **15 packages**:
+$$ \sum_{k \in D} x_{ijk} \le 15, \quad \forall (i,j) \in E $$
+
+**Strategic Trade-off:**
+- **Strategy B (Transit via L1 & L3):** L1 must carry D1 demand (10) + D2 transit (10) = 20 pkgs. **Exceeds capacity of 15.** Infeasible without L2.
+- **Strategy A (Direct via L1 & L2):** L1 carries 10, L2 carries 10. Both within capacity. Feasible.
+
+**Objective Function:**
+To simulate the bi-level hierarchy where the Leader (Infrastructure) has priority, we solve a single-level MILP with a weighted objective:
+$$ \text{Minimize } Z = 1.0 \times \text{Network Length} + 0.01 \times \text{Operational Cost} $$

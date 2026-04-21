@@ -1,0 +1,41 @@
+A UAM (Urban Air Mobility) company wants to set up a Middle-Mile Delivery (MMD) network using drones in an urban region. Drones fly packages from origin warehouses to vertiports (drone landing/charging stations), which then serve as distribution centers for last-mile delivery.
+**Goal:** Select exactly 3 vertiport locations from 8 candidate zones to maximize the total daily package demand served under drone range, last-mile distance, capacity, and safety distance constraints.
+**Service Logic:**
+1. **Coverage Rule (AND condition):** A vertiport $ k $ can serve an OD pair $ (i, j) $ ONLY if the warehouse-to-vertiport distance $ \le 30 $ km **AND** the vertiport-to-destination distance $ \le 10 $ km.
+2. **Multiple Allocation:** Each OD pair's demand can be split (fractionally) across multiple open vertiports that cover it.
+ 
+**Parameters:**
+- **Number of vertiports to select (p):** 3.
+- **Vertiport type:** Small only (capacity = 288 packages/day per vertiport).
+- **Drone range:** 30 km (warehouse to vertiport).
+- **Last-mile distance:** 10 km (vertiport to destination).
+- **Minimum safety distance:** 2.44 km between any two selected vertiports.
+ 
+**Warehouses (Origins):**
+- **W1:** Location (10, 20).
+- **W2:** Location (30, 10).
+- **W3:** Location (50, 25).
+ 
+**Candidate Vertiport Zones:**
+- **V1:** (15, 25), SH=0.20, SM=0.15, SP=0.30, N=0.60.
+- **V2:** (20, 15), SH=0.40, SM=0.35, SP=0.50, N=0.80.
+- **V3:** (25, 30), SH=0.10, SM=0.10, SP=0.20, N=0.40.
+- **V4:** (35, 20), SH=0.30, SM=0.25, SP=0.40, N=0.70.
+- **V5:** (40, 30), SH=0.20, SM=0.20, SP=0.30, N=0.50.
+- **V6:** (45, 15), SH=0.50, SM=0.40, SP=0.60, N=0.90.
+- **V7:** (55, 20), SH=0.15, SM=0.12, SP=0.25, N=0.55.
+- **V8:** (30, 35), SH=0.25, SM=0.20, SP=0.35, N=0.65.
+ 
+**Destination Zones (with demand from each warehouse):**
+- **D1 (12, 22):** W1=50, W2=20, W3=10.
+- **D2 (18, 18):** W1=30, W2=40, W3=15.
+- **D3 (22, 28):** W1=40, W2=25, W3=20.
+- **D4 (28, 12):** W1=20, W2=60, W3=25.
+- **D5 (32, 25):** W1=15, W2=35, W3=30.
+- **D6 (38, 18):** W1=10, W2=45, W3=35.
+- **D7 (42, 28):** W1=5, W2=30, W3=50.
+- **D8 (48, 22):** W1=5, W2=20, W3=55.
+- **D9 (52, 30):** W1=0, W2=15, W3=60.
+- **D10 (58, 18):** W1=0, W2=10, W3=45.
+ 
+**Question:** For the simplified single-objective version (maximize total demand served), which 3 vertiport locations should be selected from the 8 candidates to maximize the total demand covered, subject to capacity, drone range, last-mile distance, and safety distance constraints?

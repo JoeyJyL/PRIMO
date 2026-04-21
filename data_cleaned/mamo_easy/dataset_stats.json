@@ -1,0 +1,10 @@
+{
+  "total_samples": 545,
+  "train_samples": 436,
+  "test_samples": 109,
+  "datasets_used": [
+    "mamo_easy"
+  ],
+  "dataset_name": "mamo_easy",
+  "processed_at": "2025-10-03T20:13:25.634866+00:00"
+}

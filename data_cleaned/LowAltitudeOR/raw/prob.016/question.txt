@@ -1,0 +1,35 @@
+
+FuturePolis City is launching a pilot Urban Air Mobility (UAM) project to alleviate ground traffic congestion.
+**Core Concept:** Building a Skyport doesn't guarantee ridership. Users will only choose UAM if the **Utility** (savings in time vs. cost + social acceptance) outweighs Ground Transport.
+**Decision Problem:**
+- Select exactly **2** locations to build Skyports from 4 candidates.
+- Maximize the expected total number of UAM passengers.
+- Passenger choice is modeled via a Binary Logit Model:
+  $$ P(UAM) = \frac{e^{V_{uam}}}{e^{V_{uam}} + e^{V_{ground}}} $$
+  $$ V = -0.5 \times \text{Time(min)} - 0.1 \times \text{Cost(\$)} + \text{AcceptanceFactor} $$
+
+**Candidate Skyports:**
+- **S1 (North Suburb):** Residential hub.
+- **S2 (South Suburb):** Residential hub.
+- **S3 (CBD):** Major work center.
+- **S4 (Tech Park):** Innovation district.
+
+**Traffic Corridors (Demand Routes):**
+*Route 1: S1 $\to$ S3 (North to CBD)*
+- Daily Commuters: **2000**
+- Ground: 60 min, $10.
+- Air (if S1 & S3 open): 15 min, $50. Acceptance: 0.
+
+*Route 2: S2 $\to$ S3 (South to CBD)*
+- Daily Commuters: **1500**
+- Ground: 50 min, $8.
+- Air (if S2 & S3 open): 12 min, $45. Acceptance: 0.
+
+*Route 3: S1 $\to$ S4 (North to Tech)*
+- Daily Commuters: **500**
+- Ground: 40 min, $12.
+- Air (if S1 & S4 open): 20 min, $40. Acceptance: +2 (Tech workers love new tech).
+
+**Constraints:**
+- You can only open 2 Skyports.
+- A route is served by UAM only if **BOTH** origin and destination Skyports are open.

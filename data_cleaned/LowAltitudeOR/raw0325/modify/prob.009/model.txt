@@ -1,0 +1,69 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+Let's denote:
+
+- $ x_j $: a binary variable indicating if charging station $ j $ is opened.
+- $ w_i $: a binary variable indicating if target zone $ i $ is covered.
+
+Thus, we have:
+
+- $ x_j \in \{0, 1\} $ for all $ j \in J $.
+- $ w_i \in \{0, 1\} $ for all $ i \in I $.
+
+### Step 2: Objective Function Construction
+
+The goal is to maximize the total number of covered target zones under the station budget.
+
+The objective function is:
+
+$$
+\text{Maximize } Z = \sum_{i \in I} w_i
+$$
+
+Where:
+
+- $ I $ is the set of target zones.
+
+### Step 3: Constraint Construction
+
+Now, let's identify and translate the constraints into mathematical expressions.
+
+1. **Coverage Logic Constraint:**
+
+A target zone $ i $ can only be marked as covered if at least one open station covers it.
+
+For each target zone $ i \in I $:
+
+$$
+w_i \le \sum_{j \in J} a_{ij} x_j
+$$
+
+Where:
+
+- $ a_{ij} $ is a binary parameter, $ a_{ij} = 1 $ if $ d_{ij} \le R_{max} $, else 0.
+
+2. **Station Budget Constraint:**
+
+At most 3 stations can be opened due to funding limitations.
+
+$$
+\sum_{j \in J} x_j \le 3
+$$
+
+3. **Binary Constraints:**
+
+The decision variables must be binary.
+
+For all $ j \in J $:
+
+$$
+x_j \in \{0, 1\}
+$$
+
+For all $ i \in I $:
+
+$$
+w_i \in \{0, 1\}
+$$

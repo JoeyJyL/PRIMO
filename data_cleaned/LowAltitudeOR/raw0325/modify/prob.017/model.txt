@@ -1,0 +1,136 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+Let's denote:
+
+- $ x_i $: a binary variable indicating if vertiport $ i $ is opened.
+- $ y_r $: a binary variable indicating if RS route $ r $ is active.
+- $ w_z $: a binary variable indicating if ODM zone $ z $ is covered.
+
+Thus, we have:
+
+- $ x_i \in \{0, 1\} $ for all $ i \in V $.
+- $ y_r \in \{0, 1\} $ for all $ r \in R $.
+- $ w_z \in \{0, 1\} $ for all $ z \in Z $.
+
+### Step 2: Objective Function Construction
+
+The goal is to maximize the total served demand, considering both the RS routes and the ODM zones.
+
+The objective function is:
+
+$$
+\text{Maximize } \sum_{r \in R} D_r^{RS} y_r + \sum_{z \in Z} D_z^{ODM} w_z
+$$
+
+Where:
+
+- $ D_r^{RS} $ is the demand of RS route $ r $.
+- $ D_z^{ODM} $ is the demand of ODM zone $ z $.
+- $ R $ is the set of RS routes and $ Z $ is the set of ODM zones.
+
+### Step 3: Constraint Construction
+
+Now, let's identify and translate the constraints into mathematical expressions.
+
+1. **Budget Constraint:**
+
+The total construction cost of all opened vertiports must not exceed the total budget $ B = 28 $.
+
+$$
+\sum_{i \in V} C_i x_i \le B
+$$
+
+Where:
+
+- $ C_i $ is the cost to open vertiport $ i $.
+- $ B = 28 $ (million dollars).
+
+2. **RS Route Logic (AND condition):**
+
+A route $ r $ connecting vertiports $ i $ and $ j $ can be active only if both endpoints are opened.
+
+For each route $ r \in R $ connecting $ i $ and $ j $:
+
+$$
+y_r \le x_i
+$$
+
+$$
+y_r \le x_j
+$$
+
+3. **ODM Coverage Logic (OR condition):**
+
+Zone $ z $ is covered if at least one vertiport $ i $ that covers it (where $ Cover_{zi} = 1 $) is opened.
+
+For each zone $ z \in Z $:
+
+$$
+w_z \le \sum_{i \in V} Cover_{zi} x_i
+$$
+
+4. **Binary Constraints:**
+
+The decision variables must be binary.
+
+For all $ i \in V, r \in R, z \in Z $:
+
+$$
+x_i, y_r, w_z \in \{0, 1\}
+$$
+
+### Summary of the Mathematical Model
+
+The mathematical model for the problem is as follows:
+
+**Decision Variables:**
+
+- $ x_i \in \{0, 1\} $ for all $ i \in V $.
+- $ y_r \in \{0, 1\} $ for all $ r \in R $.
+- $ w_z \in \{0, 1\} $ for all $ z \in Z $.
+
+**Objective Function:**
+
+Maximize:
+
+$$
+\text{Maximize } \sum_{r \in R} D_r^{RS} y_r + \sum_{z \in Z} D_z^{ODM} w_z
+$$
+
+**Constraints:**
+
+1. **Budget Constraint:**
+
+$$
+\sum_{i \in V} C_i x_i \le 28
+$$
+
+2. **RS Route Logic:**
+
+For each route $ r $ connecting $ i, j $:
+
+$$
+y_r \le x_i
+$$
+$$
+y_r \le x_j
+$$
+
+3. **ODM Coverage Logic:**
+
+For each zone $ z \in Z $:
+
+$$
+w_z \le \sum_{i \in V} Cover_{zi} x_i
+$$
+
+4. **Binary Constraints:**
+
+$$
+x_i, y_r, w_z \in \{0, 1\}
+$$
+
+1. Optimization Problem Classification: ILP
+2. Problem Scale: Medium

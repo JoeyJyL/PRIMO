@@ -1,0 +1,266 @@
+<think>
+Identifying the decision variables, objective function, and constraints for the UAV Traffic Management Full Optimization (FO) model based on the paper "Traffic management and resource allocation for UAV-based parcel delivery in low-altitude urban space" by Li, Hansen, and Zou (2022).
+
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+Let's denote:
+
+- $ I_{ij} $: a binary variable indicating whether flight $ i \in \mathcal{F} $ takes path $ j \in \mathcal{P} $ (1) or not (0).
+- $ t_i $: a continuous variable representing the assigned departure time (seconds) of flight $ i \in \mathcal{F} $.
+- $ D_i $: a continuous variable representing the delay cost ($) of flight $ i \in \mathcal{F} $.
+- $ z_c $: a binary variable equal to 1 if both flights in conflict $ c = (i,j,m,n) \in \mathcal{C} $ take their respective conflicting paths (i.e., $ I_{ij} = 1 $ and $ I_{mn} = 1 $).
+- $ X_c $: a binary variable equal to 1 if flight $ i $ exits the conflict region before flight $ m $ enters (flight $ i $ passes first) for conflict $ c \in \mathcal{C} $.
+- $ x_c $: a binary variable equal to 1 if flight $ m $ exits the conflict region before flight $ i $ enters (flight $ m $ passes first) for conflict $ c \in \mathcal{C} $.
+
+Thus, we have:
+
+- $ I_{ij} \in \{0, 1\} $ for all $ i \in \mathcal{F} $, $ j \in \mathcal{P} $.
+- $ t_i \geq 0 $ and continuous for all $ i \in \mathcal{F} $.
+- $ D_i \geq 0 $ and continuous for all $ i \in \mathcal{F} $.
+- $ z_c, X_c, x_c \in \{0, 1\} $ for all $ c \in \mathcal{C} $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total system cost, which includes the delay cost of all UAV missions and the path cost of all UAV missions.
+
+The objective function is:
+
+$$
+\min \sum_{i \in \mathcal{F}} D_i + \sum_{i \in \mathcal{F}} \sum_{j \in \mathcal{P}} c_{ij} \cdot I_{ij}
+$$
+
+Where:
+
+- $ D_i $ is the delay cost of flight $ i $.
+- $ c_{ij} $ is the path cost of flight $ i $ taking path $ j $.
+
+### Step 3: Constraint Construction
+
+Now, let's identify and translate the constraints into mathematical expressions.
+
+1. **Piecewise Linear Delay Cost Constraint (linearized):**
+
+The delay cost function is piecewise linear with a threshold $ d $. The linearization replaces the original piecewise definition with two lower-bound constraints:
+
+For each flight $ i \in \mathcal{F} $:
+
+$$
+D_i \geq r_i (t_i - s_i)
+$$
+
+$$
+D_i \geq r_i \cdot d + R_i (t_i - s_i - d)
+$$
+
+Where:
+- $ r_i $ is the unit delay cost ($/s) when delay $ \leq d $.
+- $ R_i $ is the unit delay cost ($/s) when delay $ > d $; $ R_i = 2r_i $.
+- $ s_i $ is the scheduled departure time of flight $ i $.
+- $ d $ is the delay cost threshold (seconds).
+
+2. **Conflict Resolution — Flight $ i $ passes before flight $ m $:**
+
+If both flights take their conflicting paths ($ z_c = 1 $) and flight $ i $ is assigned to pass first ($ X_c = 1 $), then flight $ i $ must exit the conflict region at least $ t_0 $ seconds before flight $ m $ enters:
+
+For each $ c = (i,j,m,n) \in \mathcal{C} $:
+
+$$
+t_i + e_c + t_0 \leq M(1 - X_c) + B_c + t_m
+$$
+
+Where:
+- $ e_c $ is the travel time from origin to exit point of conflict region for flight $ i $.
+- $ B_c $ is the travel time from origin to entry point of conflict region for flight $ m $.
+- $ t_0 $ is the safety separation buffer (10 seconds).
+- $ M $ is a sufficiently large constant (Big-M).
+
+3. **Conflict Resolution — Flight $ m $ passes before flight $ i $:**
+
+For each $ c = (i,j,m,n) \in \mathcal{C} $:
+
+$$
+t_m + E_c + t_0 \leq M(1 - x_c) + b_c + t_i
+$$
+
+Where:
+- $ E_c $ is the travel time from origin to exit point of conflict region for flight $ m $.
+- $ b_c $ is the travel time from origin to entry point of conflict region for flight $ i $.
+
+4. **Linearization of $ z_c = I_{ij} \cdot I_{mn} $ (upper bounds):**
+
+For each $ c = (i,j,m,n) \in \mathcal{C} $:
+
+$$
+z_c \leq I_{ij}
+$$
+
+$$
+z_c \leq I_{mn}
+$$
+
+$$
+z_c + 1 \geq I_{ij} + I_{mn}
+$$
+
+5. **Conflict Ordering Constraint:**
+
+If both flights take conflicting paths, exactly one must pass first:
+
+For each $ c \in \mathcal{C} $:
+
+$$
+X_c + x_c = z_c
+$$
+
+6. **Departure Time Feasibility Constraint:**
+
+The assigned departure time must not be earlier than the scheduled departure time:
+
+For each $ i \in \mathcal{F} $:
+
+$$
+t_i \geq s_i
+$$
+
+7. **Path Selection Constraint:**
+
+Each flight must choose exactly one path:
+
+For each $ i \in \mathcal{F} $:
+
+$$
+\sum_{j \in \mathcal{P}} I_{ij} = 1
+$$
+
+8. **Non-negativity and Binary Constraints:**
+
+$$
+D_i \geq 0, \quad t_i \geq 0 \quad \forall i \in \mathcal{F}
+$$
+
+$$
+I_{ij}, z_c, X_c, x_c \in \{0, 1\}
+$$
+
+### Summary of the Mathematical Model
+
+The mathematical model for the UAV Traffic Management Full Optimization (FO) problem is as follows:
+
+**Sets:**
+
+- $ \mathcal{F} = \{1, 2, 3, 4\} $: Set of UAV flights.
+- $ \mathcal{P} = \{0, 1\} $: Set of alternative paths (0 = optimal, 1 = alternative).
+- $ \mathcal{C} = \{C1, C2, C3, C4\} $: Set of spatial conflict flight-path pairs, where each element $ c = (i, j, m, n) $ denotes that flight $ i $ on path $ j $ spatially conflicts with flight $ m $ on path $ n $.
+
+**Parameters:**
+
+- $ s_i $: Scheduled departure time of flight $ i $ (seconds): $ s_1=0, s_2=10, s_3=5, s_4=20 $.
+- $ c_{ij} $: Path cost of flight $ i $ taking path $ j $ ($): $ c_{i,0}=0 $ for all $ i $; $ c_{1,1}=0.5, c_{2,1}=0.8, c_{3,1}=0.3, c_{4,1}=0.6 $.
+- $ r_i $: Unit delay cost ($/s) when delay $ \leq d $: $ r_1=0.004, r_2=0.002, r_3=0.005, r_4=0.003 $.
+- $ R_i = 2r_i $: Unit delay cost ($/s) when delay $ > d $.
+- $ d = 300 $: Delay cost threshold (seconds).
+- $ t_0 = 10 $: Safety separation buffer (seconds).
+- $ M = 10000 $: Big-M constant.
+- $ b_c, e_c, B_c, E_c $: Travel times to entry/exit points of conflict regions (seconds).
+
+**Decision Variables:**
+
+- $ I_{ij} \in \{0, 1\} $ for all $ i \in \mathcal{F} $, $ j \in \mathcal{P} $.
+- $ t_i \geq 0 $ and continuous for all $ i \in \mathcal{F} $.
+- $ D_i \geq 0 $ and continuous for all $ i \in \mathcal{F} $.
+- $ z_c, X_c, x_c \in \{0, 1\} $ for all $ c \in \mathcal{C} $.
+
+**Objective Function:**
+
+Minimize:
+
+$$
+\sum_{i \in \mathcal{F}} D_i + \sum_{i \in \mathcal{F}} \sum_{j \in \mathcal{P}} c_{ij} \cdot I_{ij}
+$$
+
+**Constraints:**
+
+1. **Piecewise Linear Delay Cost (linearized):**
+
+For each $ i \in \mathcal{F} $:
+
+$$
+D_i \geq r_i (t_i - s_i)
+$$
+
+$$
+D_i \geq r_i \cdot d + R_i (t_i - s_i - d)
+$$
+
+2. **Conflict Resolution — Flight $ i $ first:**
+
+For each $ c = (i,j,m,n) \in \mathcal{C} $:
+
+$$
+t_i + e_c + t_0 \leq M(1 - X_c) + B_c + t_m
+$$
+
+3. **Conflict Resolution — Flight $ m $ first:**
+
+For each $ c = (i,j,m,n) \in \mathcal{C} $:
+
+$$
+t_m + E_c + t_0 \leq M(1 - x_c) + b_c + t_i
+$$
+
+4. **Linearization of $ z_c $:**
+
+For each $ c = (i,j,m,n) \in \mathcal{C} $:
+
+$$
+z_c \leq I_{ij}
+$$
+
+$$
+z_c \leq I_{mn}
+$$
+
+$$
+z_c + 1 \geq I_{ij} + I_{mn}
+$$
+
+5. **Conflict Ordering:**
+
+For each $ c \in \mathcal{C} $:
+
+$$
+X_c + x_c = z_c
+$$
+
+6. **Departure Time Feasibility:**
+
+For each $ i \in \mathcal{F} $:
+
+$$
+t_i \geq s_i
+$$
+
+7. **Path Selection:**
+
+For each $ i \in \mathcal{F} $:
+
+$$
+\sum_{j \in \mathcal{P}} I_{ij} = 1
+$$
+
+8. **Non-negativity and Binary Constraints:**
+
+$$
+D_i \geq 0, \quad t_i \geq 0 \quad \forall i \in \mathcal{F}
+$$
+
+$$
+I_{ij}, z_c, X_c, x_c \in \{0, 1\}
+$$
+
+</think>
+
+1. Optimization Problem Classification: MILP
+2. Problem Size: Small

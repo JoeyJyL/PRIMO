@@ -1,0 +1,25 @@
+
+Beijing is planning an Urban Air Mobility (UAM) network of eVTOL (electric vertical takeoff and landing) air taxis.
+
+**Candidate Vertiport Sites:**
+- V1: CBD Financial District | Build Cost: 10M CNY
+- V2: PEK (Capital International Airport) | Build Cost: 15M CNY
+- V3: PKX (Daxing International Airport) | Build Cost: 12M CNY
+
+**Budget:** 25M CNY total construction budget.
+
+**Services:**
+1. **Regional Shuttle (RS):** Fixed inter-vertiport routes. Both endpoints must be built.
+   - Route A (V1↔V2): Expected daily demand = 100 passengers.
+   - Route B (V1↔V3): Expected daily demand = 110 passengers.
+
+2. **On-Demand Metro (ODM):** Short-hop service. Only one vertiport needed.
+   - Zone 1 (served by V1): Expected daily demand = 20 passengers.
+   - Zone 2 (served by V2): Expected daily demand = 30 passengers.
+   - Zone 3 (served by V3): Expected daily demand = 30 passengers.
+
+**Airspace Constraint:**
+Due to overlapping southern approach corridor conflicts between CBD and Daxing, V1 and V3 cannot both be operational simultaneously. At most one of V1 or V3 may be built.
+
+**Goal:**
+Maximize total expected daily demand served, subject to the budget constraint and the airspace mutual exclusion constraint between V1 and V3.

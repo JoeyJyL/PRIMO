@@ -1,0 +1,74 @@
+# Drone Delivery Routing Problem - Simplified Scenario
+
+## Background
+A small e-commerce company wants to use drones to deliver packages to customers in a suburban area. The company has one depot where drones are stored, charged, and loaded with packages. Each drone has limited battery capacity and payload capacity, and must return to the depot after completing deliveries to recharge and pick up new packages.
+
+## Problem Description
+The company needs to determine:
+1. How many drones to deploy
+2. The delivery routes for each drone
+3. The battery size for each route
+
+The goal is to minimize the total cost (drone purchase cost + battery energy cost) while completing all deliveries within a specified time limit.
+
+## Decision-Making Stages
+**Stage 1:** Determine the number of drones to purchase
+**Stage 2:** Assign delivery routes to each drone (drones can make multiple trips)
+**Stage 3:** Optimize battery weight for each route to provide exactly enough energy
+
+## Parameters
+
+### Drone Specifications
+- **Drone Cost (F):** $500 per drone
+- **Maximum Carrying Capacity (Q):** 3.0 kg (includes battery + payload)
+- **Flight Speed (v):** 6 m/s
+- **Service Time per Location (τ):** 60 seconds (descent, delivery, ascent)
+- **Frame Weight (W):** 1.5 kg (not included in carrying capacity)
+
+### Energy Model (Linear Approximation)
+Power consumption: P(m) = α·m + β
+- **α (power per kg):** 0.217 kW/kg
+- **β (base power):** 0.185 kW
+
+### Battery Specifications
+- **Energy Density (ξ):** 650 kJ/kg
+- **Energy Cost (ε):** $0.1 per kJ
+
+### Operational Constraints
+- **Delivery Time Limit (T):** 600 seconds (10 minutes)
+- **Maximum Number of Drones (M):** 5 drones
+
+## Mock Data
+
+### Depot Location
+- **Depot (Location 0):** (0, 0) meters
+
+### Customer Locations and Demands
+- **Customer 1:** Location (100, 200) m, Demand 0.8 kg
+- **Customer 2:** Location (300, 100) m, Demand 1.2 kg
+- **Customer 3:** Location (200, 300) m, Demand 0.6 kg
+- **Customer 4:** Location (400, 250) m, Demand 1.0 kg
+- **Customer 5:** Location (150, 400) m, Demand 0.9 kg
+
+### Distance Matrix (Euclidean distances in meters)
+Pre-calculated distances between all location pairs:
+
+|       | Depot | C1    | C2    | C3    | C4    | C5    |
+|-------|-------|-------|-------|-------|-------|-------|
+| Depot | 0     | 223.6 | 316.2 | 360.6 | 472.0 | 427.2 |
+| C1    | 223.6 | 0     | 223.6 | 141.4 | 316.2 | 206.2 |
+| C2    | 316.2 | 223.6 | 0     | 223.6 | 158.1 | 335.4 |
+| C3    | 360.6 | 141.4 | 223.6 | 0     | 223.6 | 111.8 |
+| C4    | 472.0 | 316.2 | 158.1 | 223.6 | 0     | 304.1 |
+| C5    | 427.2 | 206.2 | 335.4 | 111.8 | 304.1 | 0     |
+
+## Objective
+Minimize the total cost = (Number of drones × Drone cost) + (Total energy consumed × Energy cost)
+
+Subject to:
+- All customers must be visited exactly once
+- Each route must start and end at the depot
+- Battery weight + Payload weight ≤ Maximum carrying capacity
+- Battery energy must be sufficient for each route
+- All deliveries must be completed within the time limit
+- Drones can be reused for multiple trips

@@ -1,0 +1,197 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+Let's denote:
+
+- $ x_{ij}^r $: a binary variable indicating whether route $ r $ travels from location $ i $ to location $ j $ (1) or not (0).
+- $ u_r $: a binary variable indicating whether route $ r $ is used (1) or not (0).
+- $ y_i^r $: a continuous variable representing the payload weight (kg) when leaving location $ i $ on route $ r $.
+- $ q_r $: a continuous variable representing the battery weight (kg) for route $ r $.
+- $ z_r $: a continuous variable representing the energy consumed (kJ) on route $ r $.
+- $ t_i^r $: a continuous variable representing the time (seconds) when location $ i $ is visited on route $ r $.
+- $ a_r $: a continuous variable representing the arrival time (seconds) at the depot after completing route $ r $.
+- $ n $: an integer variable representing the number of drones to purchase.
+
+Thus, we have:
+
+- $ x_{ij}^r \in \{0, 1\} $ for all $ i, j \in N $, $ i \neq j $, $ r \in R $.
+- $ u_r \in \{0, 1\} $ for all $ r \in R $.
+- $ y_i^r \geq 0 $ for all $ i \in N $, $ r \in R $.
+- $ q_r \geq 0 $ for all $ r \in R $.
+- $ z_r \geq 0 $ for all $ r \in R $.
+- $ t_i^r \geq 0 $ for all $ i \in N $, $ r \in R $.
+- $ a_r \geq 0 $ for all $ r \in R $.
+- $ n \in \mathbb{Z}^+ $, $ 1 \leq n \leq M $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total cost, which includes the cost of purchasing drones and the cost of energy consumed.
+
+The objective function is:
+
+$$
+\min F \cdot n + \varepsilon \sum_{r \in R} z_r
+$$
+
+Where:
+
+- $ F $ is the cost of one drone (dollars).
+- $ \varepsilon $ is the energy cost per kJ (dollars/kJ).
+- $ n $ is the number of drones purchased.
+- $ z_r $ is the energy consumed on route $ r $ (kJ).
+
+### Step 3: Constraint Construction
+
+1. **Customer Visit Constraint:**
+
+Each customer must be visited exactly once across all routes.
+
+For each customer $ i \in N_0 $:
+
+$$
+\sum_{r \in R} \sum_{j \in N, j \neq i} x_{ij}^r = 1
+$$
+
+2. **Flow Conservation Constraint:**
+
+For each location $ i \in N $ and route $ r \in R $:
+
+$$
+\sum_{j \in N, j \neq i} x_{ij}^r - \sum_{j \in N, j \neq i} x_{ji}^r = 0
+$$
+
+3. **Route Start Constraint:**
+
+For each route $ r \in R $:
+
+$$
+\sum_{j \in N_0} x_{0j}^r = u_r
+$$
+
+4. **Route End Constraint:**
+
+For each route $ r \in R $:
+
+$$
+\sum_{i \in N_0} x_{i0}^r = u_r
+$$
+
+5. **Payload Weight Tracking Constraint:**
+
+For each route $ r \in R $:
+
+$$
+y_0^r = \sum_{j \in N_0} D_j \cdot x_{0j}^r
+$$
+
+6. **Payload Decrease Constraint:**
+
+For each route $ r \in R $, and customers $ i, j \in N_0 $, $ i \neq j $:
+
+$$
+y_i^r \geq y_j^r + D_j \cdot x_{ij}^r - K(1 - x_{ij}^r)
+$$
+
+7. **Capacity Constraint:**
+
+For each location $ i \in N $ and route $ r \in R $:
+
+$$
+q_r + y_i^r \leq Q \cdot u_r
+$$
+
+8. **Energy Consumption Constraint:**
+
+For each route $ r \in R $:
+
+$$
+z_r = \sum_{i \in N} \sum_{j \in N, j \neq i} \left[\alpha \left(q_r + \frac{y_i^r + y_j^r}{2}\right) + \beta\right] \cdot \left(\frac{d_{ij}}{v} + \tau\right) \cdot x_{ij}^r
+$$
+
+9. **Battery Energy Constraint:**
+
+For each route $ r \in R $:
+
+$$
+\xi \cdot q_r \geq z_r
+$$
+
+10. **Time Progression Constraint:**
+
+For each route $ r \in R $, locations $ i \in N $ and $ j \in N_0 $, $ i \neq j $:
+
+$$
+t_j^r \geq t_i^r + \left(\frac{d_{ij}}{v} + \tau\right) - K(1 - x_{ij}^r)
+$$
+
+11. **Arrival Time Constraint:**
+
+For each route $ r \in R $ and customer $ i \in N_0 $:
+
+$$
+a_r \geq t_i^r + \left(\frac{d_{i0}}{v} + \tau\right) - K(1 - x_{i0}^r)
+$$
+
+12. **Time Limit Constraint:**
+
+For each route $ r \in R $:
+
+$$
+a_r \leq T + K(1 - u_r)
+$$
+
+13. **Drone Count Constraint:**
+
+$$
+n \geq \sum_{r \in R} u_r
+$$
+
+14. **Drone Availability Constraint:**
+
+$$
+n \leq M
+$$
+
+15. **Hazardous Material Incompatibility Constraint (Customers 2 and 4 cannot be on the same route):**
+
+Due to aviation safety regulations regarding incompatible hazardous materials, customers 2 and 4 must be assigned to different routes. For each route $ r \in R $:
+
+$$
+\sum_{j \in N, j \neq 2} x_{2j}^r + \sum_{j \in N, j \neq 4} x_{4j}^r \leq 1 \quad \forall r \in R
+$$
+
+### Summary of the Mathematical Model
+
+**Sets:**
+
+- $ N = \{0, 1, 2, 3, 4, 5\} $: Set of all locations (0 = depot, 1-5 = customers).
+- $ N_0 = \{1, 2, 3, 4, 5\} $: Set of customer locations only.
+- $ R = \{0, 1, 2, 3, 4\} $: Set of potential routes.
+
+**Parameters:**
+
+- $ d_{ij} $: Distance between location $ i $ and $ j $ (meters).
+- $ D_i $: Demand at customer $ i $ (kg).
+- $ F = 500 $: Cost of one drone (dollars).
+- $ Q = 3.0 $: Maximum carrying capacity (kg).
+- $ v = 6 $: Flight speed (m/s).
+- $ \tau = 60 $: Service time per location (seconds).
+- $ \alpha = 0.217 $: Power consumption coefficient (kW/kg).
+- $ \beta = 0.185 $: Base power consumption (kW).
+- $ \xi = 650 $: Battery energy density (kJ/kg).
+- $ \varepsilon = 0.1 $: Energy cost (dollars/kJ).
+- $ T = 600 $: Delivery time limit (seconds).
+- $ M = 5 $: Maximum number of drones.
+- $ K = 10000 $: Big M constant.
+
+**Decision Variables:**
+
+- $ x_{ij}^r \in \{0, 1\} $ for all $ i, j \in N $, $ i \neq j $, $ r \in R $.
+- $ u_r \in \{0, 1\} $ for all $ r \in R $.
+- $ y_i^r \geq 0 $ for all $ i \in N $, $ r \in R $.
+- $ q_r \geq 0 $ for all $ r \in R $.
+- $ z_r \geq 0 $ for all $ r \in R $.
+- $ t_i^r \geq 0 $ for all $ i \in N $, $ r \in R $.
+- $ a_r \geq 0 $ for all $ r \in R $.
+- $ n \in \mathbb{Z}^+ $, $ 1 \leq n \leq M $.

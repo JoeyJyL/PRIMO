@@ -1,0 +1,67 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the UAM network planning problem.
+
+- $ x_i \in \{0, 1\} $: whether vertiport $ i $ is built ($ i \in \{1, 2, 3\} $).
+- $ y_r \in \{0, 1\} $: whether Regional Shuttle route $ r $ is activated ($ r \in \{A, B\} $).
+- $ w_z \in \{0, 1\} $: whether On-Demand Metro zone $ z $ is served ($ z \in \{1, 2, 3\} $).
+
+### Step 2: Objective Function Construction
+
+Maximize total expected daily demand served:
+
+$$
+\max \sum_{r \in R} D_r \cdot y_r + \sum_{z \in Z} D_z \cdot w_z
+$$
+
+Where $ D_r $ and $ D_z $ denote the expected daily demand for RS route $ r $ and ODM zone $ z $, respectively.
+
+Substituting values:
+
+$$
+\max\ 100 y_A + 110 y_B + 20 w_1 + 30 w_2 + 30 w_3
+$$
+
+### Step 3: Constraint Construction
+
+1. **Budget Constraint:**
+
+$$
+10 x_1 + 15 x_2 + 12 x_3 \le 25
+$$
+
+2. **RS Route Activation (AND logic):**
+
+Route A requires both V1 and V2:
+
+$$
+y_A \le x_1, \quad y_A \le x_2
+$$
+
+Route B requires both V1 and V3:
+
+$$
+y_B \le x_1, \quad y_B \le x_3
+$$
+
+3. **ODM Zone Service:**
+
+Each zone requires its associated vertiport:
+
+$$
+w_1 \le x_1, \quad w_2 \le x_2, \quad w_3 \le x_3
+$$
+
+4. **Airspace Mutual Exclusion Constraint:**
+
+Due to overlapping southern approach corridor conflicts, V1 and V3 cannot both be built:
+
+$$
+x_1 + x_3 \le 1
+$$
+
+5. **Binary Constraints:**
+
+$$
+x_i, y_r, w_z \in \{0, 1\}
+$$

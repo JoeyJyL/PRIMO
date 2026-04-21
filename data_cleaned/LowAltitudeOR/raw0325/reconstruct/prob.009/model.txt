@@ -1,0 +1,74 @@
+### Step 1: Decision Variables Definition
+
+We define the decision variables using a **disaggregated assignment** formulation, which replaces the original aggregate coverage constraints with explicit target-to-station assignment variables.
+
+- $ x_j \in \{0, 1\} $: binary variable indicating if charging station $ j $ is opened, for all $ j \in J $.
+- $ y_{ij} \in [0, 1] $: continuous assignment variable indicating that target $ i $ is assigned to (covered by) station $ j $, for all $ i \in I, j \in J $ where $ a_{ij} = 1 $.
+
+Note: The assignment variables $ y_{ij} $ are defined as continuous. Given binary $ x_j $ and the assignment/linking structure, the LP relaxation over $ y $ is integral by construction (transportation polytope with unit right-hand sides).
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total number of charging stations opened.
+
+$$
+\text{Minimize } Z = \sum_{j \in J} x_j
+$$
+
+### Step 3: Constraint Construction
+
+1. **Assignment Constraint (Disaggregated Coverage):**
+
+Every target zone $ i $ must be assigned to exactly one open charging station. This replaces the original aggregate coverage inequality $ \sum_j a_{ij} x_j \ge 1 $.
+
+For each target zone $ i \in I $:
+
+$$
+\sum_{j \in J:\, a_{ij}=1} y_{ij} = 1
+$$
+
+2. **Linking Constraint:**
+
+A target can only be assigned to a station that is open. For each valid pair $ (i, j) $ with $ a_{ij} = 1 $:
+
+$$
+y_{ij} \le x_j
+$$
+
+3. **Variable Domains:**
+
+$$
+x_j \in \{0, 1\} \quad \forall\, j \in J, \qquad y_{ij} \ge 0 \quad \forall\, (i,j):\, a_{ij}=1
+$$
+
+Where:
+
+- $ a_{ij} = 1 $ if $ d_{ij} \le R_{max} $, else 0.
+- $ d_{ij} $ is the Euclidean distance between target $ i $ and candidate station $ j $.
+
+### Summary of the Mathematical Model
+
+**Decision Variables:**
+
+- $ x_j \in \{0, 1\} $ for all $ j \in J $.
+- $ y_{ij} \in [0, 1] $ for all $ (i,j) $ with $ a_{ij} = 1 $.
+
+**Objective Function:**
+
+$$
+\text{Minimize } Z = \sum_{j \in J} x_j
+$$
+
+**Constraints:**
+
+$$
+\sum_{j:\, a_{ij}=1} y_{ij} = 1 \quad \forall\, i \in I
+$$
+
+$$
+y_{ij} \le x_j \quad \forall\, (i,j):\, a_{ij} = 1
+$$
+
+$$
+x_j \in \{0, 1\}, \quad y_{ij} \ge 0
+$$

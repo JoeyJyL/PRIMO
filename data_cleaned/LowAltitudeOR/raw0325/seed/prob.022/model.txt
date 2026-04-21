@@ -1,0 +1,142 @@
+### Step 1: Decision Variables Definition
+
+Let's define the sets and decision variables for the problem.
+
+**Sets:**
+- $S$: Set of hubs (departure points), indexed by $s$
+- $I$: Set of candidate charging station locations, indexed by $i, j$
+- $N$: Set of delivery points (customers), indexed by $n$
+- $E$: Set of feasible edges where $E = \{(s,i) | s \in S, i \in I, d(s,i) \leq 2R\} \cup \{(i,j) | i,j \in I, i \neq j, d(i,j) \leq 2R\}$
+
+**Parameters:**
+- $R$: One-way coverage radius of a drone
+- $2R$: Maximum distance a drone can travel on a full charge
+- $l_e$: Length of edge $e \in E$
+- $c_{in}$: Binary coverage matrix, $c_{in} = 1$ if delivery point $n$ is within distance $R$ from station $i$
+- $\theta$: Weight parameter for bi-objective function, $\theta \in [0,1]$
+- $\beta_1, \beta_2$: Normalizing constants for objective function
+
+**Decision Variables:**
+- $x_i \in \{0, 1\}$: Binary variable equal to 1 if candidate location $i$ is activated as a station; 0 otherwise.
+- $y_{esi} \in \{0, 1\}$: Binary variable equal to 1 if edge $e$ is used in the path between hub $s$ and station $i$; 0 otherwise.
+- $u_{si} \in \{0, 1\}$: Binary variable equal to 1 if location $i$ is a terminal station connected to hub $s$; 0 otherwise.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize a weighted combination of total path lengths and the number of active stations.
+
+$$
+\text{Minimize } Z = \frac{\theta}{\beta_1} \cdot \sum_{s \in S} \sum_{i \in I} \sum_{e \in E} l_e \cdot y_{esi} \cdot u_{si} + \frac{(1-\theta)}{\beta_2} \cdot \sum_{i \in I} x_i
+$$
+
+Where:
+- First term: Sum of lengths of paths connecting hubs to terminal stations
+- Second term: Number of active charging stations
+- $\theta = 0$: Minimize number of stations only
+- $\theta = 1$: Minimize total path lengths only
+- $\theta \in (0,1)$: Balanced optimization
+
+**Linearization:** Since the first term involves multiplication of binary variables $y_{esi} \cdot u_{si}$, we introduce auxiliary variable $z_{esi}$ and constraints:
+$$z_{esi} \leq y_{esi}, \quad z_{esi} \leq u_{si}, \quad z_{esi} \geq y_{esi} + u_{si} - 1$$
+
+The linearized objective becomes:
+$$
+\text{Minimize } Z = \frac{\theta}{\beta_1} \cdot \sum_{s \in S} \sum_{i \in I} \sum_{e \in E} l_e \cdot z_{esi} + \frac{(1-\theta)}{\beta_2} \cdot \sum_{i \in I} x_i
+$$
+
+### Step 3: Constraint Construction
+
+**1. Flow Balance Constraints:**
+
+Terminal nodes have only entering edges; intermediate nodes have balanced in/out flow:
+
+$$
+\sum_{e \in E: dest(e)=k} y_{esi} - \sum_{e \in E: source(e)=k} y_{esi} = \begin{cases} u_{si} & \text{if } i = k \\ 0 & \text{otherwise} \end{cases} \quad \forall s \in S, \forall i,k \in I
+$$
+
+**2. Single Outgoing Edge from Hub:**
+
+At most one edge originating from hub $s$ for each path to destination $i$:
+
+$$
+\sum_{e \in E: source(e)=s} y_{esi} \leq 1 \quad \forall s \in S, i \in I
+$$
+
+**3. Edge Activation Constraint:**
+
+Edges can only be activated on paths to terminal stations:
+
+$$
+y_{esi} \leq u_{si} \quad \forall e \in E, s \in S, i \in I
+$$
+
+**4. Single Hub Assignment:**
+
+Each terminal station is connected to at most one hub:
+
+$$
+\sum_{s \in S} u_{si} \leq 1 \quad \forall i \in I
+$$
+
+**5. Delivery Point Coverage:**
+
+Every delivery point must be covered by at least one active terminal station:
+
+$$
+\sum_{s \in S} \sum_{i \in I} c_{in} \cdot u_{si} \geq 1 \quad \forall n \in N
+$$
+
+**6. Station Activation Linkage:**
+
+A station is active if any path passes through it:
+
+$$
+\sum_{s \in S} \sum_{e \in E} y_{esi} \leq x_i \cdot M \quad \forall i \in I
+$$
+
+Where $M$ is a large constant (e.g., $|I|$).
+
+**7. Variable Domains:**
+
+$$
+x_i \in \{0, 1\} \quad \forall i \in I
+$$
+
+$$
+y_{esi} \in \{0, 1\} \quad \forall s \in S, i \in I, e \in E
+$$
+
+$$
+u_{si} \in \{0, 1\} \quad \forall s \in S, i \in I
+$$
+
+$$
+z_{esi} \in \{0, 1\} \quad \forall s \in S, i \in I, e \in E
+$$
+
+### Summary of the Mathematical Model
+
+**Decision Variables:**
+- $x_i \in \{0, 1\}$: Station activation
+- $y_{esi} \in \{0, 1\}$: Edge usage in path from $s$ to $i$
+- $u_{si} \in \{0, 1\}$: Terminal station designation
+- $z_{esi} \in \{0, 1\}$: Linearization auxiliary variable
+
+**Objective Function:**
+
+Minimize weighted combination of total path lengths and number of active stations:
+$$
+Z = \frac{\theta}{\beta_1} \cdot \sum_{s,i,e} l_e \cdot z_{esi} + \frac{(1-\theta)}{\beta_2} \cdot \sum_{i \in I} x_i
+$$
+
+**Constraints:**
+1. Flow balance at each node (path connectivity)
+2. Single outgoing edge from hub per path
+3. Edge activation only for terminal station paths
+4. Single hub assignment per terminal station
+5. Complete delivery point coverage
+6. Station activation linkage
+7. Binary variable domains
+
+1. Optimization Problem Classification: MILP
+2. Problem Scale: Small

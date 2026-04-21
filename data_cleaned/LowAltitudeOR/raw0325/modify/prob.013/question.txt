@@ -1,0 +1,33 @@
+
+The City Planning Bureau of Chengdu is designing a UAM network for daily commuting in 2030.
+**Goal:** Select at most **3** Vertiport locations from 5 candidates to optimize a weighted multi-objective function:
+   1. **Maximize Served Demand:** Cover as many commuters as possible.
+   2. **Minimize Construction Cost:** Keep budget low.
+   3. **Minimize Noise Impact:** Avoid high noise impact in sensitive areas.
+
+**Objective Function ($Z$):**
+$$ Z = 10 \times (\text{Covered Demand}) - 1 \times (\text{Total Cost}) - 2 \times (\text{Total Noise}) $$
+We want to **Maximize** $Z$.
+
+**Constraints:**
+- Maximum Open Vertiports: 3.
+- Coverage Radius ($R_{max}$): 4.0 km. A zone is covered if a vertiport is within this distance.
+- **Equity Mandate:** Zone Z2 must be covered to ensure service equity for the north-west residential community. At least one vertiport capable of covering Z2 must be opened.
+
+**Data - Candidate Vertiports:**
+- **V1 (South):** (2, 2) | Cost: 100 | Noise: 5
+- **V2 (North-West):** (2, 8) | Cost: 120 | Noise: 8 (Dense Residential)
+- **V3 (East):** (8, 2) | Cost: 110 | Noise: 4
+- **V4 (North-East):** (8, 8) | Cost: 130 | Noise: 6
+- **V5 (Center):** (5, 5) | Cost: 90  | Noise: 3
+
+**Data - Commuter Zones (Demand):**
+- **Z1:** (1, 1) | Demand: 50 | Near V1
+- **Z2:** (1, 9) | Demand: 40 | Near V2
+- **Z3:** (9, 1) | Demand: 60 | Near V3
+- **Z4:** (9, 9) | Demand: 45 | Near V4
+
+**Analysis:**
+- V5 (Center) covers nothing because all Zones are at corners (dist > 4).
+- V1 covers Z1. V2 covers Z2. V3 covers Z3. V4 covers Z4.
+- Trade-off: V2 has high cost and high noise but covers 40 demand. However the equity mandate requires Z2 coverage.

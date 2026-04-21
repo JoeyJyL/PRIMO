@@ -1,0 +1,72 @@
+### Step 1: Decision Variables Definition
+
+**Sets:**
+- $I$: Set of OTR (overdose-triggered request) locations
+- $J$: Set of candidate drone base locations
+- $I_j \subseteq I$: OTR locations within coverage radius of base $j$
+- $J_i \subseteq J$: Drone bases that can cover OTR location $i$
+
+**Parameters:**
+- $\lambda_i$: Arrival rate of OTRs at location $i$ (Poisson process)
+- $d_{ij}$: Distance between base $j$ and OTR location $i$
+- $v$: Drone flight speed
+- $E[\xi]$: Expected non-travel service time
+- $E[S_{ij}] = \frac{d_{ij}}{v} + E[\xi]$: Expected service time for OTR at $i$ served by base $j$
+- $p$: Total number of drones available
+- $q = 4$: Maximum number of drone bases to open
+- $M$: Maximum drones per base (= 2)
+- $r$: Drone coverage radius
+
+**Airspace Corridor Constraint:**
+DB1 and DB4 cannot both be opened due to conflicting low-altitude flight corridors:
+$$x_{DB1} + x_{DB4} \leq 1$$
+
+**Decision Variables:**
+- $x_j \in \{0, 1\}$: Binary, 1 if drone base is opened at location $j$
+- $y_{ij} \in \{0, 1\}$: Binary, 1 if OTR at location $i$ is assigned to base $j$
+- $K_j \in \mathbb{Z}^+$: Number of drones deployed at base $j$ (bounded by $M$)
+- $\gamma_j^{(m)} \in \{0, 1\}$: Binary, 1 if exactly $m$ drones are placed at base $j$
+
+### Step 2: Objective Function Construction
+
+The objective is to minimize the average response time across all OTRs.
+
+**Arrival Rate at Base j:**
+$$\eta_j = \sum_{i \in I_j} \lambda_i \cdot y_{ij}$$
+
+**Average Response Time (Objective):**
+$$\min R = \frac{1}{\sum_{l \in I} \lambda_l} \sum_{i \in I} \sum_{j \in J_i} \lambda_i \cdot y_{ij} \cdot \left( E[Q_j] + \frac{d_{ij}}{v} \right)$$
+
+For computational tractability, the queueing delay is approximated via a penalty proportional to utilization.
+
+### Step 3: Constraint Construction
+
+**1. Assignment Constraint:**
+Each OTR location must be assigned to exactly one drone base:
+$$\sum_{j \in J_i} y_{ij} = 1, \quad \forall i \in I$$
+
+**2. Base Opening Constraint:**
+OTRs can only be assigned to opened bases:
+$$y_{ij} \leq x_j, \quad \forall i \in I, j \in J_i$$
+
+**3. Maximum Bases Constraint:**
+$$\sum_{j \in J} x_j \leq q$$
+
+**4. Drone Deployment Constraint:**
+Drones can only be placed at opened bases:
+$$x_j \leq K_j \leq M \cdot x_j, \quad \forall j \in J$$
+
+**5. Total Drones Constraint:**
+$$\sum_{j \in J} K_j = p$$
+
+**6. Stability Constraint:**
+Ensure queueing system stability at each base:
+$$\sum_{i \in I_j} \lambda_i \cdot y_{ij} \cdot E[S_{ij}] < K_j, \quad \forall j \in J$$
+
+**7. Binary Representation of K:**
+$$K_j = \sum_{m=1}^{M} m \cdot \gamma_j^{(m)}, \quad \forall j \in J$$
+$$\sum_{m=1}^{M} \gamma_j^{(m)} = x_j, \quad \forall j \in J$$
+
+**8. Variable Domains:**
+$$x_j, y_{ij}, \gamma_j^{(m)} \in \{0, 1\}$$
+$$K_j \in \mathbb{Z}^+$$

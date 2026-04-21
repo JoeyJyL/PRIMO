@@ -1,0 +1,124 @@
+1. Optimization Problem Classification: MILP
+2. Problem Size: Small
+
+### Step 1: Decision Variables Definition
+
+- $ y_j \in \{0, 1\} $: whether candidate vertiport site $ j $ is selected.
+- $ x_{ij} \in \{0, 1\} $: whether demand point $ i $ is assigned to vertiport $ j $.
+- $ z_{ij} \in \{0, 1\} $: whether demand point $ i $ is covered by vertiport $ j $.
+- $ \delta_{jh} \in \{0, 1\} $ (auxiliary): whether mobility hub $ h $ certifies vertiport $ j $ as hub-proximate (i.e., hub $ h $ is within threshold distance $ r $ of site $ j $).
+
+### Step 2: Objective Function Construction
+
+**g1 (Maximize ridership covered):**
+
+$$
+g_1 = \sum_{i \in D} \sum_{j \in V} q_i \cdot z_{ij}
+$$
+
+**g2 (Minimize total facility cost):**
+
+$$
+g_2 = \sum_{j \in V} (c_c + c_o) \cdot y_j
+$$
+
+**g3 (Minimize total travel distance):**
+
+$$
+g_3 = \sum_{i \in D} \sum_{j \in V} d_{ij} \cdot x_{ij}
+$$
+
+**Scalarized objective (minimization):**
+
+$$
+\text{Minimize} \quad -w_1 \cdot g_1 + w_2 \cdot g_2 + w_3 \cdot g_3
+$$
+
+### Step 3: Constraint Construction
+
+**1. Hub Proximity via Big-M (replaces preprocessing):**
+
+Instead of fixing $ y_j = 0 $ for ineligible sites via preprocessing, we introduce auxiliary binary variables $ \delta_{jh} $ and enforce hub proximity through explicit Big-M constraints.
+
+Let $ M $ be a sufficiently large constant (e.g., $ M = \max_{j,h} l_{jh} $). For each vertiport $ j \in V $ and hub $ h \in H $:
+
+$$
+l_{jh} \leq r + M(1 - \delta_{jh})
+$$
+
+This ensures $ \delta_{jh} = 1 $ implies $ l_{jh} \leq r $ (hub $ h $ is close enough to certify site $ j $). If $ l_{jh} > r $, then $ \delta_{jh} $ is forced to 0.
+
+Each selected vertiport must have at least one certifying hub:
+
+$$
+y_j \leq \sum_{h \in H} \delta_{jh} \quad \forall j \in V
+$$
+
+**2. Assignment Constraint:**
+
+$$
+\sum_{j \in V} x_{ij} = 1 \quad \forall i \in D
+$$
+
+**3. Assignment-Selection Linking:**
+
+$$
+x_{ij} \leq y_j \quad \forall i \in D,\ j \in V
+$$
+
+**4. Coverage via Combined Big-M Constraint:**
+
+Define coverage eligibility parameter $ a_{ij} = \mathbb{1}[d_{ij} \leq R] $. Instead of separate coverage-selection linking ($ z_{ij} \leq y_j $) and coverage feasibility ($ z_{ij} = 0 $ for $ d_{ij} > R $), use a single combined constraint:
+
+$$
+z_{ij} \leq a_{ij} \cdot y_j \quad \forall i \in D,\ j \in V
+$$
+
+When $ a_{ij} = 0 $ (demand $ i $ is outside service radius $ R $ of vertiport $ j $): $ z_{ij} \leq 0 $, forcing $ z_{ij} = 0 $.
+When $ a_{ij} = 1 $ (within radius): $ z_{ij} \leq y_j $, allowing coverage only if the vertiport is selected.
+
+**5. Budget Constraint:**
+
+$$
+\sum_{j \in V} y_j \leq p
+$$
+
+### Summary of the Mathematical Model
+
+**Sets:**
+
+- $ D = \{1, 2, 3, 4, 5, 6\} $: demand points.
+- $ V = \{1, 2, 3, 4, 5\} $: candidate vertiport sites.
+- $ H = \{1, 2, 3, 4\} $: existing mobility hubs.
+
+**Parameters:**
+
+- $ q_i $: ridership at demand point $ i $.
+- $ d_{ij} $: Euclidean distance from demand $ i $ to vertiport $ j $ (km).
+- $ l_{jh} $: Euclidean distance from vertiport $ j $ to hub $ h $ (km).
+- $ a_{ij} = \mathbb{1}[d_{ij} \leq R] $: coverage eligibility indicator.
+- $ R = 3.0 $ km, $ r = 1.5 $ km, $ p = 3 $, $ c_c + c_o = 500 $, $ M = \max_{j,h} l_{jh} $.
+- $ w_1 = 1.0,\ w_2 = 0.001,\ w_3 = 0.01 $.
+
+**Decision Variables:**
+
+- $ y_j \in \{0, 1\} $ for all $ j \in V $.
+- $ x_{ij} \in \{0, 1\} $ for all $ i \in D,\ j \in V $.
+- $ z_{ij} \in \{0, 1\} $ for all $ i \in D,\ j \in V $.
+- $ \delta_{jh} \in \{0, 1\} $ for all $ j \in V,\ h \in H $ (auxiliary).
+
+**Objective Function:**
+
+$$
+\min \quad -w_1 \sum_{i \in D} \sum_{j \in V} q_i z_{ij} + w_2 \sum_{j \in V} (c_c + c_o) y_j + w_3 \sum_{i \in D} \sum_{j \in V} d_{ij} x_{ij}
+$$
+
+**Constraints:**
+
+1. $ l_{jh} \leq r + M(1 - \delta_{jh}) $ for all $ j \in V,\ h \in H $
+2. $ y_j \leq \sum_{h \in H} \delta_{jh} $ for all $ j \in V $
+3. $ \sum_{j \in V} x_{ij} = 1 $ for all $ i \in D $
+4. $ x_{ij} \leq y_j $ for all $ i \in D,\ j \in V $
+5. $ z_{ij} \leq a_{ij} \cdot y_j $ for all $ i \in D,\ j \in V $
+6. $ \sum_{j \in V} y_j \leq p $
+7. $ y_j, x_{ij}, z_{ij}, \delta_{jh} \in \{0, 1\} $

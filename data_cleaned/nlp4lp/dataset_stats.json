@@ -1,0 +1,10 @@
+{
+  "total_samples": 242,
+  "train_samples": 193,
+  "test_samples": 49,
+  "datasets_used": [
+    "nlp4lp"
+  ],
+  "dataset_name": "nlp4lp",
+  "processed_at": "2025-11-03T17:34:50.512002+00:00"
+}

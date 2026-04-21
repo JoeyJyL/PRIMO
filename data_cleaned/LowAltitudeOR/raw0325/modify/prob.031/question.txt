@@ -1,0 +1,105 @@
+{
+type: paper-based optimization problem
+source: "A branch-price-and-cut algorithm for the time-dependent multiple truck-drone routing problem", Computers and Operations Research, Vol. 182, 2025
+fullContent:
+
+A logistics company operates a fleet of trucks, each equipped with multiple drones, to deliver parcels to customers in an urban area. Trucks travel on roads with time-dependent travel times (due to traffic congestion), while drones fly directly over the urban area with constant (time-independent) travel times. The goal is to minimize the total duration of all truck routes.
+
+**Problem Type:** Time-Dependent Multiple Truck-Drone Routing Problem (TD-MTDRP) — a variant of the Vehicle Routing Problem with Time Windows (VRPTW), formulated as a Set-Partitioning Model (SPM), solved via Branch-Price-and-Cut (BPC).
+
+**Problem Description:**
+- A fleet of K homogeneous trucks departs from a depot (node 0) and returns to the depot (node n+1)
+- Each truck carries at most m drones
+- Trucks visit customer nodes and serve them directly (truck delivery)
+- When a truck stops at a customer node, it simultaneously dispatches all its drones to serve nearby customers (drone delivery)
+- The truck WAITS at the customer node until ALL drones return before moving to the next customer
+- Each customer is served exactly once (by either truck or drone)
+- Objective: minimize total duration (sum of travel time + waiting time of all truck routes)
+
+**Sets:**
+- V = {0} ∪ N ∪ {n+1}: all nodes (depot 0, customers N, ending depot n+1)
+- E = {(i,j) | i,j ∈ V}: edges for truck routes
+- A = {<i,j> | i,j ∈ N}: arcs for drone routes
+- K: set of homogeneous trucks
+- Ω: set of all feasible truck-drone combination routes
+
+**Parameters:**
+- b_i: demand of customer i ∈ V
+- s_i^t: truck service time at node i
+- s_i^d: drone service time at node i
+- g_i: parcel weight at node i
+- [e_i, l_i]: time window (earliest/latest service start time) at node i
+- Q: truck capacity (maximum total demand per truck, including both truck-delivered and drone-delivered customers)
+- m: maximum number of drones per truck
+- B: maximum drone battery (expressed as maximum round-trip flight time)
+- D: maximum drone payload weight
+- τ_{ij}(δ_i): time-dependent truck travel time on edge (i,j) when departing at time δ_i
+  (modeled as piecewise linear function based on stepwise speed profile)
+- t_{ij}: constant drone travel time on arc <i,j>, defined as t_{ij} = Euclidean_distance(i,j) / drone_speed
+- t_r: truck travel time in route r ∈ Ω
+- w_r: truck waiting time (including service time and waiting for drones) in route r ∈ Ω
+- α_{ir}: number of times customer i is visited by truck in route r
+- β_{ir}: number of times customer i is visited by drone in route r
+
+**Decision Variables:**
+- θ_r ∈ {0,1}: 1 if truck-drone route r ∈ Ω is selected in the optimal solution
+
+**Objective Function (Set-Partitioning Model):**
+Minimize total duration of all routes:
+
+  min  Σ_{r ∈ Ω} (t_r + w_r) θ_r
+
+**Constraints:**
+1. Each customer visited exactly once (by truck or drone):
+   Σ_{r ∈ Ω} (α_{ir} + β_{ir}) θ_r = 1,  ∀i ∈ N
+
+2. Number of trucks used does not exceed fleet size:
+   Σ_{r ∈ Ω} θ_r ≤ |K|
+
+3. Co-assignment dependency: Customers C2 and C3 must be assigned to the same truck route (consolidation requirement for deliveries to the same building complex):
+   For any route r selected (θ_r = 1), if r serves C2, it must also serve C3, and vice versa.
+
+4. Binary variable definition:
+   θ_r ∈ {0,1},  r ∈ Ω
+
+**Ready Time Functions (state dynamics):**
+For a truck-drone route r = (v_0, v_1(H_1), v_2(H_2), ..., v_i(H_i)):
+- Truck arrival time: ρ_i^t = δ_{i-1}^t + τ_{(i-1)i}(δ_{i-1}^t)
+- Drone arrival time at customer j dispatched from truck stop i: ρ_{ij}^d = ρ_i^t + t_{ij},  ∀h_{ij} ∈ H_i
+- Drone ready time (after serving customer j): δ_{ij}^d = ρ_{ij}^d + s_j^d,  ∀h_{ij} ∈ H_i
+- Truck ready time at stop i: δ_i^t = max(ρ_i^t + s_i^t, max_{h_{ij} ∈ H_i}(δ_{ij}^d + t_{ji}))
+
+**Speed Profile (time-dependent truck travel — for general problem context):**
+The planning horizon is divided into 5 time zones with different speed profiles:
+- Slow:   [P0=1.0, P1=0.33, P2=0.67, P3=0.5, P4=0.83]
+- Normal: [P0=1.17, P1=0.67, P2=1.33, P3=0.83, P4=1.0]
+- Fast:   [P0=1.5, P1=1.67, P2=1.17, P3=1.33, P4=1.0] (relative speeds)
+Note: The small-scale instance below uses time-independent (constant speed) truck travel for simplicity.
+
+**Small-Scale Instance for Exact Solving:**
+Depot at (50, 50). 6 customers in a 100×100 area.
+- 2 trucks (K=2), max 2 drones per truck (m=2)
+- Truck capacity Q = 20, Drone payload limit D = 10
+- Drone battery B = 40 (maximum round-trip flight time; constraint: 2·t_{ij} ≤ B)
+- Drone speed = 2 × truck speed (truck speed = 1 unit/time)
+- Drone service time = 0.5 × truck service time
+
+Customers (with differentiated time windows):
+- C1: (20, 80), demand=5,  weight=4,  s^t=2, s^d=1,   window=[0, 80]
+- C2: (80, 80), demand=8,  weight=12, s^t=3, s^d=1.5, window=[0, 200]  [too heavy for drone]
+- C3: (20, 20), demand=6,  weight=5,  s^t=2, s^d=1,   window=[0, 200]
+- C4: (80, 20), demand=7,  weight=9,  s^t=3, s^d=1.5, window=[60, 180]  [earliest start = 60]
+- C5: (50, 80), demand=4,  weight=3,  s^t=2, s^d=1,   window=[0, 60]   [tight deadline]
+- C6: (50, 20), demand=5,  weight=6,  s^t=2, s^d=1,   window=[80, 200]  [late earliest start]
+
+Total demand: 5+8+6+7+4+5 = 35
+Capacity per truck: Q = 20 → must use both trucks (no single truck can carry all)
+
+Truck travel time (Euclidean distance / speed=1, time-independent for this instance):
+  τ_{ij} = Euclidean_distance(i, j) / 1.0
+
+Drone travel time:
+  t_{ij} = Euclidean_distance(i, j) / 2.0
+
+**Question:** Find the optimal partition of customers between the two trucks, the assignment of customers to truck/drone delivery, and the optimal truck routes to minimize total duration (sum of both truck durations), subject to capacity, battery, payload, time window, and co-assignment (C2 and C3 must be in the same truck route) constraints.
+}

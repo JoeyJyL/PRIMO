@@ -1,0 +1,121 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+- $ y_k \in \{0, 1\} $: binary variable indicating if Depot $ k $ is open, for all $ k \in D $.
+- $ z_{ik} \in \{0, 1\} $: binary variable indicating if Village $ i $ is served by a drone from Depot $ k $, for all $ i \in V, k \in D $.
+- $ v_i \in \{0, 1\} $: binary variable indicating if Village $ i $ is served by a truck, for all $ i \in V $.
+- $ x_{ij} \in \{0, 1\} $: binary variable indicating if the truck travels from node $ i $ to node $ j $, for all $ i, j \in N $.
+- $ u_i \ge 0 $: continuous sequencing variable for subtour elimination via **indicator constraints**, for all $ i \in N $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total cost: fixed depot costs, drone operational costs, and truck travel costs.
+
+$$
+\min \sum_{k \in D} F_k y_k + \sum_{i \in V} \sum_{k \in D} c_{ik}^{drone} z_{ik} + \sum_{i \in N} \sum_{j \in N} c_{ij}^{truck} x_{ij}
+$$
+
+Where:
+
+- $ F_k $ is the fixed cost of opening Depot $ k $.
+- $ c_{ik}^{drone} = 2 \cdot d_{ik} \cdot \rho_{drone} $ is the drone round-trip cost from Depot $ k $ to Village $ i $.
+- $ c_{ij}^{truck} = d_{ij} \cdot \rho_{truck} $ is the truck travel cost on arc $ (i,j) $.
+
+### Step 3: Constraint Construction
+
+1. **Service Guarantee Constraint:**
+
+Every village must be served exactly once, either by a drone or by a truck.
+
+For each Village $ i \in V $:
+
+$$
+\sum_{k \in D} z_{ik} + v_i = 1
+$$
+
+2. **Aggregated Drone-Depot Capacity (replaces individual linking):**
+
+Instead of individual constraints $ z_{ik} \le y_k $ for each village-depot pair, we use a **single aggregated capacity constraint** per depot. The total number of villages served by drones from Depot $ k $ is bounded by $ |V| \cdot y_k $:
+
+For each Depot $ k \in D $:
+
+$$
+\sum_{i \in V} z_{ik} \le |V| \cdot y_k
+$$
+
+When $ y_k = 0 $, this forces all $ z_{ik} = 0 $. When $ y_k = 1 $, all drone assignments are feasible. For binary variables, this is equivalent to the individual linking constraints.
+
+(Note: Pre-processing filters ensure $ z_{ik} = 0 $ if Village $ i $ is out of drone range or exceeds drone capacity.)
+
+3. **Truck Routing Constraints:**
+
+For each node $ i \in N $:
+
+$$
+\sum_{j \in N \setminus \{i\}} x_{ij} = \alpha_i, \qquad \sum_{j \in N \setminus \{i\}} x_{ji} = \alpha_i
+$$
+
+Where $ \alpha_k = y_k $ for depots and $ \alpha_i = v_i $ for villages.
+
+4. **Subtour Elimination via Indicator Constraints:**
+
+Instead of the Big-M linearization $ u_j \ge u_i + 1 - M(1 - x_{ij}) $, we use **indicator constraints** that are handled natively by the solver without introducing a Big-M parameter:
+
+For all $ i, j \in N \setminus \{1\},\; i \ne j $:
+
+$$
+x_{ij} = 1 \;\Longrightarrow\; u_j \ge u_i + 1
+$$
+
+This eliminates subtours among non-root nodes. Node 1 (Depot A) serves as the sequencing root.
+
+5. **At Least One Depot Open:**
+
+$$
+\sum_{k \in D} y_k \ge 1
+$$
+
+6. **Binary and Domain Constraints:**
+
+$$
+y_k, z_{ik}, v_i, x_{ij} \in \{0, 1\}, \quad u_i \ge 0
+$$
+
+### Summary of the Mathematical Model
+
+**Decision Variables:**
+
+- $ y_k \in \{0, 1\} $ for all $ k \in D $.
+- $ z_{ik} \in \{0, 1\} $ for all $ i \in V, k \in D $.
+- $ v_i \in \{0, 1\} $ for all $ i \in V $.
+- $ x_{ij} \in \{0, 1\} $ for all $ i, j \in N $.
+- $ u_i \ge 0 $ for all $ i \in N $.
+
+**Objective Function:**
+
+$$
+\min \sum_{k \in D} F_k y_k + \sum_{i \in V} \sum_{k \in D} c_{ik}^{drone} z_{ik} + \sum_{i \in N} \sum_{j \in N} c_{ij}^{truck} x_{ij}
+$$
+
+**Constraints:**
+
+$$
+\sum_{k \in D} z_{ik} + v_i = 1 \quad \forall\, i \in V
+$$
+
+$$
+\sum_{i \in V} z_{ik} \le |V| \cdot y_k \quad \forall\, k \in D
+$$
+
+$$
+\sum_{j \ne i} x_{ij} = \alpha_i, \quad \sum_{j \ne i} x_{ji} = \alpha_i \quad \forall\, i \in N
+$$
+
+$$
+x_{ij} = 1 \;\Longrightarrow\; u_j \ge u_i + 1 \quad \forall\, i, j \in N \setminus \{1\},\; i \ne j
+$$
+
+$$
+\sum_{k \in D} y_k \ge 1
+$$

@@ -1,0 +1,114 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+Let's denote:
+
+- $ x_{ij} $: a binary variable indicating if a UAV travels from node $ i $ to node $ j $ (1) or not (0), for all valid arcs $ (i,j) \in A $.
+- $ y_k $: a binary variable indicating if FAS $ k $ is open (1) or not (0), for all $ k \in S $.
+- $ u_i $: a continuous variable representing the cumulative distance traveled upon arriving at node $ i $, for all $ i \in T $.
+
+Thus, we have:
+
+- $ x_{ij} \in \{0, 1\} $ for all $ (i,j) \in A $.
+- $ y_k \in \{0, 1\} $ for all $ k \in S $.
+- $ u_i \ge 0 $ for all $ i \in T $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total cost, which consists of FAS construction costs and UAV travel costs.
+
+The objective function is:
+
+$$
+\min \sum_{k \in S} f_k y_k + \sum_{(i,j) \in A} c_{ij} x_{ij}
+$$
+
+Where:
+
+- $ f_k $ is the fixed cost of opening FAS $ k $.
+- $ c_{ij} $ is the travel cost (distance) from node $ i $ to node $ j $.
+
+### Step 3: Constraint Construction
+
+1. **Target Coverage Constraint:**
+
+Each target node must be visited exactly once (in-degree = out-degree = 1).
+
+For each target $ j \in T $:
+
+$$
+\sum_{i \in N} x_{ij} = 1
+$$
+
+For each target $ i \in T $:
+
+$$
+\sum_{j \in N} x_{ij} = 1
+$$
+
+2. **Single Route Start/End:**
+
+Exactly one route departs from any FAS and exactly one route arrives at any FAS.
+
+$$
+\sum_{k \in S} \sum_{j \in T} x_{kj} = 1
+$$
+
+$$
+\sum_{i \in T} \sum_{k \in S} x_{ik} = 1
+$$
+
+3. **FAS Opening Logic:**
+
+If a route starts or ends at FAS $ k $, it must be open.
+
+For each $ k \in S $:
+
+$$
+\sum_{j \in T} x_{kj} \le y_k
+$$
+
+$$
+\sum_{i \in T} x_{ik} \le y_k
+$$
+
+4. **Battery Range Constraint (MTZ-like):**
+
+For arcs starting from a FAS to a target:
+
+$$
+u_t \ge c_{k,t} - M(1 - x_{k,t}) \quad \forall k \in S, t \in T
+$$
+
+For arcs between targets:
+
+$$
+u_j \ge u_i + c_{ij} - M(1 - x_{ij}) \quad \forall i, j \in T, i \ne j
+$$
+
+Maximum range check:
+
+$$
+u_t \le L \quad \forall t \in T
+$$
+
+Final leg range check (return to FAS):
+
+$$
+u_t + c_{t,k} \le L + M(1 - x_{t,k}) \quad \forall t \in T, k \in S
+$$
+
+5. **Airspace Coordination Constraint:**
+
+If both FAS_1 and FAS_2 are operational, FAS_3 must also be activated.
+
+$$
+y_1 + y_2 \le 1 + y_3
+$$
+
+6. **Binary and Non-negativity Constraints:**
+
+$$
+x_{ij} \in \{0, 1\}, \quad y_k \in \{0, 1\}, \quad u_i \ge 0
+$$

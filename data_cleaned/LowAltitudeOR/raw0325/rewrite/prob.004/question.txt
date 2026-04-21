@@ -1,0 +1,37 @@
+The municipal transportation authority is planning to roll out an autonomous drone-based surveillance system for monitoring vehicular traffic across strategically important urban road corridors.
+A collection of prospective sites for installing Fixed Automated Stations (FAS) has been shortlisted. These ground stations are equipped to launch and retrieve UAVs as well as perform rapid battery exchanges.
+**A key operational feature is open-ended routing flexibility:** A drone may depart from one FAS, sequentially inspect a series of mandatory monitoring checkpoints (Targets), and ultimately touch down at a *different* (or the same) operational FAS. This one-way trip capability effectively extends the achievable patrol coverage area.
+
+**Goal:**
+Determine:
+1. Which FAS candidate sites to activate.
+2. The optimal flight itineraries for drones to ensure all Target Points are surveyed.
+Objective: Minimize the aggregate of **FAS Infrastructure Costs** and **UAV Flight Costs**.
+
+**Network & Parameters:**
+- **UAV Max Range ($L$):** 22 km.
+- **FAS Construction Cost:** $100 per station.
+- **Travel Cost:** $1.0 per km.
+
+**Locations (Coordinates in km):**
+*Candidate FAS Sites ($S$):*
+- FAS_1: (0, 0)
+- FAS_2: (20, 0)
+- FAS_3: (10, 10)
+
+*Target Points to Monitor ($T$):*
+- T_A: (5, 0)
+- T_B: (10, 0)
+- T_C: (15, 0)
+
+**Scenario Analysis:**
+- The targets T_A, T_B, T_C form a line between FAS_1 and FAS_2.
+- Distances (Euclidean):
+  - FAS_1 -> T_A: 5 km
+  - T_A -> T_B: 5 km
+  - T_B -> T_C: 5 km
+  - T_C -> FAS_2: 5 km
+  - T_C -> FAS_1: 15 km (Return trip is long!)
+  - FAS_3 is located off-axis at (10, 10).
+
+- **Constraint:** Each target must be visited exactly once. The route must start at an OPEN FAS and end at an OPEN FAS.

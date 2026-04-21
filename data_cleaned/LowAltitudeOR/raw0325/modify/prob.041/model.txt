@@ -1,0 +1,49 @@
+1. Optimization Problem Classification: MILP
+2. Problem Size: Small
+
+### Sets:
+
+- $ D = \{1, 2, 3, 4, 5, 6\} $: Set of demand points.
+- $ V = \{1, 2, 3, 4, 5\} $: Set of candidate vertiport sites.
+- $ H = \{1, 2, 3, 4\} $: Set of existing mobility hubs.
+
+### Parameters:
+
+- $ q_i $: Ridership (demand) at point $ i \in D $.
+- $ d_{ij} $: Euclidean distance from demand point $ i $ to vertiport $ j $ (km).
+- $ l_{jh} $: Euclidean distance from vertiport $ j $ to mobility hub $ h $ (km).
+- $ R = 3.0 $: Service radius (km).
+- $ r = 1.5 $: Hub distance threshold (km).
+- $ p = 2 $: Maximum number of vertiports (reduced from 3 due to budget constraint).
+- $ c_c + c_o = 500 $: Cost per vertiport (hundred USD).
+- $ w_1 = 1.0,\ w_2 = 0.001,\ w_3 = 0.01 $: Objective weights.
+
+### Decision Variables:
+
+- $ y_j \in \{0, 1\} $ for all $ j \in V $.
+- $ x_{ij} \in \{0, 1\} $ for all $ i \in D,\ j \in V $.
+- $ z_{ij} \in \{0, 1\} $ for all $ i \in D,\ j \in V $.
+
+### Objective Function:
+
+Minimize:
+
+$$
+-w_1 \sum_{i \in D} \sum_{j \in V} q_i z_{ij} + w_2 \sum_{j \in V} (c_c + c_o) y_j + w_3 \sum_{i \in D} \sum_{j \in V} d_{ij} x_{ij}
+$$
+
+### Constraints:
+
+1. **Hub Proximity:** $ y_j = 0 $ for all $ j \in V $ with $ \mathcal{H}_j = \emptyset $
+
+2. **Assignment:** $ \sum_{j \in V} x_{ij} = 1 $ for all $ i \in D $
+
+3. **Assignment-Selection Linking:** $ x_{ij} \leq y_j $ for all $ i \in D,\ j \in V $
+
+4. **Coverage-Selection Linking:** $ z_{ij} \leq y_j $ for all $ i \in D,\ j \in V $
+
+5. **Coverage Feasibility:** $ z_{ij} = 0 $ for all $ i \in D,\ j \in V $ with $ d_{ij} > R $
+
+6. **Budget:** $ \sum_{j \in V} y_j \leq p = 2 $
+
+7. **Variable Domains:** $ y_j, x_{ij}, z_{ij} \in \{0, 1\} $ for all $ i \in D,\ j \in V $

@@ -1,0 +1,59 @@
+A UAM (Urban Air Mobility) network operator needs to plan backup vertiport locations and capacities to maximize the expected throughput of the network under possible disruptions.
+The network has regular vertiports (nodes) and flight corridors (links). Disruptions reduce node or link capacities, causing traffic overflow.
+By strategically placing small backup vertiports at candidate locations, overflow traffic can be rerouted, improving network throughput under disruption.
+
+**Operational Constraints:**
+1. **Throughput Computation:** The throughput of each disruption scenario is the maximum total O-D demand the network can fulfill per unit time, subject to link and node capacity constraints and flow conservation.
+2. **Backup Node Capacity:** Each candidate backup location can be built with capacity 0 (not built), 1 (small), or 2 (large). Backup links connecting a backup node to its nearest original node have capacity equal to the backup node capacity.
+3. **Budget Constraint:** The total construction cost of selected backup vertiports cannot exceed the budget $f$.
+4. **One Capacity Per Location:** Each backup location must be assigned exactly one capacity level (including 0 = not built).
+5. **Expected Throughput Objective:** Maximize the weighted difference of expected throughput over all disruption scenarios minus construction cost, where $w$ is the cost-benefit valuation factor.
+
+**Parameters:**
+- Valuation factor $w$: 0.1
+- Budget $f$: 6
+- Cost of small backup vertiport (capacity 1): 4
+- Cost of large backup vertiport (capacity 2): 6
+- Network disturbance probability $p_{dis}$: 0.8
+
+**Original Network (from paper Example 1):**
+
+*Nodes (vertiports) with undisturbed capacities:*
+- v1: capacity = 10  (source/origin)
+- v2: capacity = 15
+- v3: capacity = 15
+- v4: capacity = 10  (destination/sink)
+
+*Links (flight corridors) with undisturbed capacities:*
+- e1 (v1 -> v2): capacity = 8
+- e2 (v1 -> v3): capacity = 4
+- e3 (v2 -> v4): capacity = 4
+- e4 (v3 -> v4): capacity = 8
+
+*O-D Demand Pairs:*
+- s1: origin=v1, destination=v2
+- s2: origin=v1, destination=v4
+- s3: origin=v3, destination=v4
+
+**Disruption Scenarios and Probabilities:**
+
+*Node disruptions (disturbed capacity, probability):*
+- v1: [(cap=5, p=0.05), (cap=0, p=0.05)]
+- v2: [(cap=10, p=0.10), (cap=5, p=0.05)]
+- v3: [(cap=10, p=0.10), (cap=5, p=0.05)]
+- v4: [(cap=5, p=0.05), (cap=0, p=0.05)]
+
+*Link disruptions (disturbed capacity, probability):*
+- e1: [(cap=4, p=0.05), (cap=0, p=0.05)]
+- e2: [(cap=2, p=0.05)]
+- e3: [(cap=2, p=0.05)]
+- e4: [(cap=4, p=0.05), (cap=0, p=0.05)]
+
+**Candidate Backup Nodes:**
+- v5: adjacent to v4 (can serve as backup landing for v4 and provide alternate path for e3)
+  - Viable capacities: [0, 1, 2] with costs [0, 4, 6]
+
+**Backup Network Topology:**
+- When v5 is built, it connects to v4 via backup links e5 (v4->v5) and e6 (v5->v4), and also provides an alternate path for e3 via e7 (v2->v5) and e8 (v5->v4).
+- Backup link capacities equal the connected backup node capacity.
+- Backup nodes and links are never disrupted.

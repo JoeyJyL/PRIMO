@@ -1,0 +1,44 @@
+A disaster response company operates a collaborative truck-and-drone system to serve rescue tasks after a disaster.
+The system must route trucks and drones from a depot to serve all customer nodes with delivery and/or surveillance tasks, and then return to the depot.
+Travel times for both trucks and drones are uncertain due to road debris and weather conditions, modeled by cardinality-constrained uncertainty sets.
+
+**Operational Constraints:**
+1. **Flow Conservation:** All trucks and drones must depart from the starting depot and return to the ending depot. Flow conservation holds at all intermediate customer nodes.
+2. **Capacity:** Trucks have a weight capacity $L^K$. Drones have a weight capacity $L^D$ and a maximum flight duration $T^D$. Each truck can carry at most $L^R$ drones when traveling on a link.
+3. **Task Coverage:** Every node must have its rescue task (delivery or surveillance) served by either a truck or a drone. An unserved task incurs a large penalty $B$.
+4. **Truck-Drone Collaboration:** Drones are dispatched from trucks at visited nodes and can return to any truck (flexible collaboration). Trucks can continue traveling after dispatching a drone.
+5. **Time Synchronization:** A drone can only depart from or land at a truck node when a truck is present at that node.
+6. **Travel Time Uncertainty:** Truck travel time on link $(i,j)$ is $\tilde{t}^K_{ij} = t^K_{ij} + \theta^K_{ij}\hat{t}^K_{ij}$ and drone travel time is $\tilde{t}^D_{ij} = t^D_{ij} + \theta^D_{ij}\hat{t}^D_{ij}$, where total deviations are budgeted by $\Gamma^K$ and $\Gamma^D$.
+
+**Parameters:**
+- Truck speed: 30 km/h
+- Drone speed: 60 km/h
+- Truck capacity ($L^K$): 100 kg
+- Drone capacity ($L^D$): 10 kg
+- Max drones per truck ($L^R$): 1
+- Max drone flight duration ($T^D$): 30 minutes
+- Penalty for unserved task ($B$): 1000
+- Uncertainty budget for trucks ($\Gamma^K$): 1
+- Uncertainty budget for drones ($\Gamma^D$): 1
+- Max deviation coefficient ($\eta^K = \eta^D$): 0.3 (i.e., $\hat{t}^K_{ij} = 0.3 t^K_{ij}$, $\hat{t}^D_{ij} = 0.3 t^D_{ij}$)
+
+**Locations & Coordinates (km):**
+
+*Depot (starting and ending node):*
+- Node 0 (start): (0, 0)
+- Node 4 (end):   (9, 0)
+
+*Customer Nodes:*
+- Node 1: (3, 0)  [Delivery task, weight demand = 5 kg, priority $p_{1,1}$ = 2]
+- Node 2: (6, 0)  [Delivery task, weight demand = 3 kg, priority $p_{2,1}$ = 1]
+- Node 3: (4, 3)  [Surveillance task, time demand = 5 min, priority $p_{3,2}$ = 3]  *(truck-unreachable)*
+
+**Network Information:**
+- Truck-reachable nodes $V^k$: {0, 1, 2, 4}
+- Drone-reachable nodes $V^d$: {0, 1, 2, 3, 4}
+- Node 3 can only be served by drones (truck-unreachable due to post-disaster road damage)
+- 1 truck ($|K|$ = 1), 1 drone ($|D|$ = 1)
+
+**Task Types:**
+- Task type $m=1$: Delivery (weight demand $d^w_{i1} > 0$, time demand $d^t_{i1} = 0$)
+- Task type $m=2$: Surveillance (weight demand $d^w_{i2} = 0$, time demand $d^t_{i2} > 0$)

@@ -1,0 +1,10 @@
+{
+  "total_samples": 213,
+  "train_samples": 170,
+  "test_samples": 43,
+  "datasets_used": [
+    "nl4opt"
+  ],
+  "dataset_name": "nl4opt",
+  "processed_at": "2025-10-03T20:13:25.642706+00:00"
+}

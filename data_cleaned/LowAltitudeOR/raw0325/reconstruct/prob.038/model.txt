@@ -1,0 +1,162 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+We use the **Big-M method** to decompose the trip coverage into explicit pickup and drop-off coverage indicator variables, linked to station decisions via Big-M constraints:
+
+- $ y_s \in \{0, 1\} $: whether station site $ s $ is opened.
+- $ p_e \in \{0, 1\} $: whether the **pickup** of trip $ e $ is covered by at least one open station.
+- $ d_e \in \{0, 1\} $: whether the **drop-off** of trip $ e $ is covered by at least one open station.
+- $ z_e \in \{0, 1\} $: whether trip $ e $ is fully covered (both pickup and drop-off).
+
+### Step 2: Pre-processing
+
+Before building the model, we pre-compute coverage relationships using the Haversine distance formula:
+
+$$
+\text{dist}(i,j) = r \times \text{hav}^{-1}\left(\text{hav}(\gamma_j - \gamma_i) + \cos(\gamma_i) \cos(\gamma_j) \text{hav}(\lambda_j - \lambda_i)\right)
+$$
+
+where $ r = 3958.8 $ miles (Earth's radius).
+
+We define:
+
+- $ P_{es} = 1 $ if the pickup location of trip $ e $ is within $ R $ miles of station $ s $, 0 otherwise.
+- $ Q_{es} = 1 $ if the drop-off location of trip $ e $ is within $ R $ miles of station $ s $, 0 otherwise.
+
+### Step 3: Objective Function Construction
+
+The goal is to minimize the total fixed cost of opening stations:
+
+$$
+\text{Minimize } Z = \sum_{s \in S} F_s \cdot y_s
+$$
+
+### Step 4: Constraint Construction
+
+1. **Pickup Coverage — Forward Linking:**
+
+The pickup coverage indicator can be 1 only if at least one open station covers the pickup:
+
+$$
+p_e \leq \sum_{s \in S} P_{es} \cdot y_s \quad \forall e \in E
+$$
+
+2. **Pickup Coverage — Backward Linking (Big-M):**
+
+If any open station covers the pickup, the indicator must be 1. Using Big-M constant $ M = |S| $:
+
+$$
+M \cdot p_e \geq \sum_{s \in S} P_{es} \cdot y_s \quad \forall e \in E
+$$
+
+3. **Drop-off Coverage — Forward Linking:**
+
+$$
+d_e \leq \sum_{s \in S} Q_{es} \cdot y_s \quad \forall e \in E
+$$
+
+4. **Drop-off Coverage — Backward Linking (Big-M):**
+
+$$
+M \cdot d_e \geq \sum_{s \in S} Q_{es} \cdot y_s \quad \forall e \in E
+$$
+
+5. **Trip Coverage — Logical AND Linearization:**
+
+Trip $ e $ is covered if and only if both pickup and drop-off are covered:
+
+$$
+z_e \leq p_e \quad \forall e \in E
+$$
+
+$$
+z_e \leq d_e \quad \forall e \in E
+$$
+
+$$
+z_e \geq p_e + d_e - 1 \quad \forall e \in E
+$$
+
+6. **Minimum Demand Fulfillment:**
+
+$$
+\sum_{e \in E} z_e \geq \lceil CS \times |E| \rceil
+$$
+
+7. **Binary Constraints:**
+
+$$
+y_s \in \{0, 1\}, \quad p_e, d_e, z_e \in \{0, 1\} \quad \forall s \in S, e \in E
+$$
+
+### Summary of the Mathematical Model
+
+**Sets:**
+
+- $ S = \{S1, S2, \ldots, S10\} $: candidate station sites.
+- $ E = \{T1, T2, \ldots, T20\} $: estimated air taxi trips.
+
+**Parameters:**
+
+- $ F_s $: fixed cost of opening station $ s $ (\$K/year).
+- $ R = 1.0 $ mile: maximum on-road travel distance.
+- $ CS = 0.70 $: minimum demand fulfillment rate.
+- $ M = |S| = 10 $: Big-M constant.
+- $ P_{es} \in \{0,1\} $: pickup coverage indicator (pre-computed).
+- $ Q_{es} \in \{0,1\} $: drop-off coverage indicator (pre-computed).
+
+**Decision Variables:**
+
+- $ y_s \in \{0, 1\} $: whether to open station $ s $.
+- $ p_e \in \{0, 1\} $: whether pickup of trip $ e $ is covered.
+- $ d_e \in \{0, 1\} $: whether drop-off of trip $ e $ is covered.
+- $ z_e \in \{0, 1\} $: whether trip $ e $ is fully covered.
+
+**Objective Function:**
+
+Minimize:
+
+$$
+Z = \sum_{s \in S} F_s \cdot y_s
+$$
+
+**Constraints:**
+
+1. **Pickup forward linking:**
+$$
+p_e \leq \sum_{s \in S} P_{es} \cdot y_s \quad \forall e \in E
+$$
+
+2. **Pickup backward linking (Big-M):**
+$$
+M \cdot p_e \geq \sum_{s \in S} P_{es} \cdot y_s \quad \forall e \in E
+$$
+
+3. **Drop-off forward linking:**
+$$
+d_e \leq \sum_{s \in S} Q_{es} \cdot y_s \quad \forall e \in E
+$$
+
+4. **Drop-off backward linking (Big-M):**
+$$
+M \cdot d_e \geq \sum_{s \in S} Q_{es} \cdot y_s \quad \forall e \in E
+$$
+
+5. **Trip coverage AND linearization:**
+$$
+z_e \leq p_e, \quad z_e \leq d_e, \quad z_e \geq p_e + d_e - 1 \quad \forall e \in E
+$$
+
+6. **Minimum coverage rate:**
+$$
+\sum_{e \in E} z_e \geq \lceil CS \times |E| \rceil
+$$
+
+7. **Binary constraints:**
+$$
+y_s, p_e, d_e, z_e \in \{0, 1\}
+$$
+
+1. Optimization Problem Classification: ILP
+2. Problem Scale: Small

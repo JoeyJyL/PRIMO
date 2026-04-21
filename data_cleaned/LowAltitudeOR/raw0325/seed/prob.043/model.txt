@@ -1,0 +1,247 @@
+d · TXT
+Copy
+
+<think>
+Identifying the decision variables, objective function, and constraints for the Multi-Visit Drone Routing Problem for Pickup and Delivery (MDRP-PD) based on the paper "The multi-visit drone routing problem for pickup and delivery services" by Meng et al. (2023).
+ 
+### Step 1: Decision Variables Definition
+ 
+Let's define the decision variables for the simplified MDRP-PD problem.
+ 
+In the simplified scenario, we have K=1 truck-drone pair, nodes N = {0, 1, 2, 3, 4} (0 = start depot, 4 = end depot, 1-3 = customers), and all customers are drone-eligible (N_d = {1, 2, 3}).
+ 
+Let's denote:
+ 
+- $ x^{0k}_{ij} \in \{0,1\} $: equals 1 if truck k traverses arc (i,j) with its drone on board.
+- $ x^{1k}_{ij} \in \{0,1\} $: equals 1 if truck k traverses arc (i,j) by itself (drone is flying).
+- $ x^{2k}_{ij} \in \{0,1\} $: equals 1 if drone k traverses arc (i,j) by itself.
+- $ z^{1k}_i \in \{0,1\} $: equals 1 if node i is served by truck k.
+- $ z^{2k}_i \in \{0,1\} $: equals 1 if node i is served by drone k.
+- $ s^{1k}_i \geq 0 $: arrival time of truck k at node i.
+- $ s'^{1k}_i \geq 0 $: departure time of truck k from node i.
+- $ s^{2k}_i \geq 0 $: arrival time of drone k at node i in a flight.
+- $ s'^{2k}_i \geq 0 $: departure time of drone k from node i in a flight.
+- $ e^k_{ij} \in [0, E] $: energy consumption of drone k over arc (i,j).
+- $ e^k_i \in [0, E] $: energy drone k has consumed when it leaves node i in a flight.
+- $ w^k_i \in [0, W] $: total parcel weight carried on drone k when it leaves node i.
+- $ w^{dk}_i \in [0, W] $: delivery weight carried on drone k when it leaves node i.
+- $ v^k_i \in [0, Q] $: load carried on truck k when it leaves node i.
+ 
+### Step 2: Objective Function Construction
+ 
+The goal is to minimize the total cost, which includes:
+1. Truck transportation cost: proportional to truck travel distance.
+2. Drone energy cost: proportional to energy consumed.
+3. Fixed deployment cost: for each deployed truck-drone pair.
+ 
+The objective function is:
+ 
+$$
+\min \; c_T \sum_{k=1}^{K} \sum_{(i,j) \in A \setminus (0,n+1)} (x^{0k}_{ij} + x^{1k}_{ij}) r_{ij} + c_F \sum_{k=1}^{K} \sum_{(i,j) \in A} e^k_{ij} + c_0 \sum_{k=1}^{K} (1 - x^{0k}_{0,n+1})
+$$
+ 
+Where:
+- $ c_T $ is the unit travel cost for trucks ($/km).
+- $ c_F $ is the unit energy cost for drones ($/Wh).
+- $ c_0 $ is the fixed deployment cost per truck-drone pair.
+- $ r_{ij} $ is the distance of arc (i,j).
+ 
+Note: The drone energy cost term $ c_F \sum e^k_{ij} $ already captures both flight energy and service energy through the energy tracking constraints below, so no separate service energy term is needed in the objective.
+ 
+### Step 3: Constraint Construction
+ 
+Now, let's identify and translate the constraints into mathematical expressions.
+ 
+1. **Route Start/End Constraints:**
+ 
+Each vehicle pair starts from depot 0 and ends at depot n+1 exactly once:
+ 
+For each k ∈ [1:K]:
+$$
+\sum_{j \in N_e} (x^{0k}_{0j} + x^{1k}_{0j}) = \sum_{i \in N_o} (x^{0k}_{i,n+1} + x^{1k}_{i,n+1}) = 1
+$$
+ 
+$$
+\sum_{j \in N_e} (x^{0k}_{0j} + x^{2k}_{0j}) = \sum_{i \in N_o} (x^{0k}_{i,n+1} + x^{2k}_{i,n+1}) = 1
+$$
+ 
+2. **Arc Usage Constraint:**
+ 
+Each arc (except depot-to-depot) is traversed by at most one vehicle:
+ 
+$$
+\sum_{k=1}^{K} (x^{0k}_{ij} + x^{1k}_{ij} + x^{2k}_{ij}) \leq 1, \quad (i,j) \in A \setminus (0, n+1)
+$$
+ 
+3. **Flow Conservation Constraints:**
+ 
+For each customer j and truck k:
+$$
+\sum_{i \in N_o} (x^{0k}_{ij} + x^{1k}_{ij}) = \sum_{i \in N_e} (x^{0k}_{ji} + x^{1k}_{ji}) = z^{1k}_j
+$$
+ 
+For each customer j and drone k:
+$$
+\sum_{i \in N_o} (x^{0k}_{ij} + x^{2k}_{ij}) = \sum_{i \in N_e} (x^{0k}_{ji} + x^{2k}_{ji})
+$$
+ 
+4. **Customer Service Constraints:**
+ 
+If a drone-eligible customer j is served by drone k, it must be visited by the same drone:
+$$
+2 z^{2k}_j \leq \sum_{i \in N_o} x^{2k}_{ij} + \sum_{i \in N_e} x^{2k}_{ji}, \quad j \in N_d
+$$
+ 
+Each customer must be served exactly once:
+$$
+\sum_{k=1}^{K} (z^{1k}_j + z^{2k}_j) = 1, \quad j \in N_c
+$$
+ 
+5. **Drone Energy Consumption Constraints:**
+ 
+[CORRECTED] Energy consumed by drone k on arc (i,j) depends on actual payload weight.
+The exact relationship is: $ e^k_{ij} = \alpha (w_0 + w^k_i) r_{ij} $ when the drone traverses arc (i,j).
+ 
+Linearized using big-M:
+$$
+e^k_{ij} \geq \alpha w_0 r_{ij} x^{2k}_{ij} + \alpha r_{ij} w^k_i - M(1 - x^{2k}_{ij}), \quad (i,j) \in A
+$$
+$$
+e^k_{ij} \leq \alpha w_0 r_{ij} + \alpha r_{ij} w^k_i + M(1 - x^{2k}_{ij}), \quad (i,j) \in A
+$$
+ 
+Zero energy when drone does not use the arc:
+$$
+0 \leq e^k_{ij} \leq E \cdot x^{2k}_{ij}, \quad (i,j) \in A
+$$
+ 
+[CORRECTED] Energy conservation when drone flies from i to serve j.
+Note on units: P is in watts (W), u'_j is in hours (h), so P · u'_j yields watt-hours (Wh) directly. No division by 3600 is needed.
+$$
+e^k_j \geq e^k_i + e^k_{ij} + P \cdot u'_j - M(2 - x^{2k}_{ij} - z^{2k}_j), \quad i \in N_o, j \in N_d
+$$
+ 
+Total energy at retrieval node must not exceed battery capacity:
+$$
+e^k_i + e^k_{ij} \leq E + M(2 - x^{2k}_{ij} - \sum_{i' \in N_o} x^{0k}_{i'j} - \sum_{i' \in N_o} x^{1k}_{i'j}), \quad i \in N_d, j \in N_e
+$$
+ 
+Energy reset at launch nodes (where drone departs from truck):
+$$
+e^k_i \leq E \cdot (2 - \sum_{j \in N_e} (x^{0k}_{ij} + x^{1k}_{ij}) - \sum_{j \in N_d} x^{2k}_{ij}), \quad i \in N_o
+$$
+ 
+6. **Drone Payload Constraints:**
+ 
+Total weight carried by drone when leaving launch nodes equals delivery weight:
+$$
+w^{dk}_i - W(2 - \sum_{j \in N_e} x^{0k}_{ij} - \sum_{j \in N_e} x^{1k}_{ij} - \sum_{j \in N_d} x^{2k}_{ij}) \leq w^k_i \leq w^{dk}_i + W(2 - \sum_{j \in N_e} x^{0k}_{ij} - \sum_{j \in N_e} x^{1k}_{ij} - \sum_{j \in N_d} x^{2k}_{ij}), \quad i \in N_o
+$$
+ 
+Delivery weight tracking:
+$$
+w^{dk}_i - d_j - M(2 - x^{2k}_{ij} - z^{2k}_j) \leq w^{dk}_j \leq w^{dk}_i - d_j + M(2 - x^{2k}_{ij} - z^{2k}_j), \quad i \in N_o, j \in N_d
+$$
+ 
+Total weight tracking (delivery minus delivered + pickup):
+$$
+w^k_i - d_j + p_j - M(2 - x^{2k}_{ij} - z^{2k}_j) \leq w^k_j \leq w^k_i - d_j + p_j + M(2 - x^{2k}_{ij} - z^{2k}_j), \quad i \in N_o, j \in N_d
+$$
+ 
+7. **Truck Load Constraints:**
+ 
+[CORRECTED] Initial truck load from depot equals total delivery demand (linear form, no nonlinear terms):
+$$
+v^k_0 = \sum_{j \in N_c} d_j
+$$
+ 
+Truck load balance at each customer node (only changes when truck serves the customer):
+$$
+v^k_j \geq v^k_i + (p_j - d_j) z^{1k}_j - M(1 - x^{0k}_{ij} - x^{1k}_{ij}), \quad i \in N_o, j \in N_c
+$$
+$$
+v^k_j \leq v^k_i + (p_j - d_j) z^{1k}_j + M(1 - x^{0k}_{ij} - x^{1k}_{ij}), \quad i \in N_o, j \in N_c
+$$
+ 
+Truck load capacity:
+$$
+0 \leq v^k_i \leq Q, \quad i \in N_o
+$$
+ 
+8. **Non-negativity and Binary Constraints:**
+ 
+$$
+x^{0k}_{ij}, x^{1k}_{ij}, x^{2k}_{ij}, z^{1k}_i, z^{2k}_i \in \{0, 1\}
+$$
+ 
+$$
+s^{1k}_i, s'^{1k}_i, s^{2k}_i, s'^{2k}_i, e^k_{ij}, e^k_i, w^k_i, w^{dk}_i, v^k_i \geq 0
+$$
+ 
+### Summary of the Mathematical Model
+ 
+The mathematical model for the MDRP-PD problem is as follows:
+ 
+**Sets:**
+ 
+- $ N_c = \{1, 2, 3\} $: Set of all customer nodes.
+- $ N_o = \{0\} \cup N_c $: Set of nodes from which a vehicle can depart.
+- $ N_e = N_c \cup \{4\} $: Set of nodes at which a vehicle can arrive.
+- $ N = \{0, 1, 2, 3, 4\} $: Set of all nodes (0 = start depot, 4 = end depot).
+- $ N_d = \{1, 2, 3\} $: Set of drone-eligible customers.
+- $ A = \{(i,j) \mid i \in N_o, j \in N_e, i \neq j\} $: Set of all arcs.
+ 
+**Parameters:**
+ 
+- $ K = 1 $: Number of available truck-drone pairs.
+- $ Q = 10 $ kg: Maximum truck load capacity.
+- $ W = 3 $ kg: Maximum drone load capacity.
+- $ E = 504 $ Wh: Maximum drone battery capacity.
+- $ w_0 = 6 $ kg: Drone curb weight.
+- $ \alpha = 3.5 $ Wh/(kg·km): Battery energy consumption per distance per weight.
+- $ c_0 = \$22 $: Fixed deployment cost per truck-drone pair.
+- $ P = 1008 $ W: Drone output power.
+- $ d_i $: Delivery demand at node i (kg): d₁=1.0, d₂=0.8, d₃=0.0.
+- $ p_i $: Pickup demand at node i (kg): p₁=0.5, p₂=0.0, p₃=1.2.
+- $ c_T = \$0.78 $/km: Unit truck travel cost.
+- $ c_F = \$0.00248 $/Wh: Unit drone energy cost.
+- $ r_{ij} $: Distance of arc (i,j) (km).
+- $ v_T = 30 $ km/h: Truck speed.
+- $ BR = 1/60 $ h: Battery replacement time.
+- $ u_i $: Truck service time at customer i.
+- $ u'_i $: Drone service time at customer i.
+- $ M $: Sufficiently large constant.
+ 
+**Decision Variables:**
+ 
+- $ x^{0k}_{ij}, x^{1k}_{ij}, x^{2k}_{ij} \in \{0,1\} $: Routing variables for truck (with drone), truck (alone), and drone.
+- $ z^{1k}_i, z^{2k}_i \in \{0,1\} $: Service assignment variables.
+- $ s^{1k}_i, s'^{1k}_i, s^{2k}_i, s'^{2k}_i \geq 0 $: Timing variables.
+- $ e^k_{ij}, e^k_i \in [0, E] $: Drone energy variables.
+- $ w^k_i, w^{dk}_i \in [0, W] $: Drone payload variables.
+- $ v^k_i \in [0, Q] $: Truck load variables.
+ 
+**Objective Function:**
+ 
+Minimize:
+ 
+$$
+c_T \sum_{k=1}^{K} \sum_{(i,j) \in A \setminus (0,n+1)} (x^{0k}_{ij} + x^{1k}_{ij}) r_{ij} + c_F \sum_{k=1}^{K} \sum_{(i,j) \in A} e^k_{ij} + c_0 \sum_{k=1}^{K} (1 - x^{0k}_{0,n+1})
+$$
+ 
+**Constraints:**
+ 
+1. Route start/end for truck and drone.
+2. Arc usage (at most once per arc).
+3. Flow conservation for truck and drone.
+4. Customer service (each served exactly once).
+5. [CORRECTED] Drone energy consumption tracking with exact weight-dependent arc energy (linearized) and correct unit handling (P·u' in Wh, no /3600).
+6. Drone payload tracking (delivery and total weight).
+7. [CORRECTED] Truck load capacity with linear initial load constraint.
+8. Time synchronization between truck and drone.
+9. Non-negativity and binary constraints.
+ 
+</think>
+ 
+1. Optimization Problem Classification: MILP
+2. Problem Size: Small

@@ -1,0 +1,68 @@
+## Background
+
+A UAV (drone) delivery company operates in a small urban area. Multiple UAV flights are scheduled to deliver parcels between buildings. Before departure, a central traffic manager must assign each UAV flight a departure time and a flight path to avoid mid-air conflicts (i.e., two UAVs occupying the same airspace at the same time). This is the **Full Optimization (FO) UTM model** from the paper "Traffic management and resource allocation for UAV-based parcel delivery in low-altitude urban space."
+
+The manager can either:
+1. **Delay** a flight's departure time (incurring a delay cost), or
+2. **Reroute** a flight to its alternative path (incurring a path cost difference).
+
+The goal is to minimize the total system cost (sum of delay costs + path costs) while ensuring no two UAVs are in the same conflict region at the same time.
+
+---
+
+## Simplified Scenario
+
+We have **4 UAV flights** (F = {1, 2, 3, 4}), each with **2 alternative paths** (P = {0 = optimal path, 1 = alternative path}).
+
+### Scheduled Departure Times (s_i)
+| Flight | Scheduled Departure Time (s, seconds) |
+|--------|---------------------------------------|
+| 1      | 0                                     |
+| 2      | 10                                    |
+| 3      | 5                                     |
+| 4      | 20                                    |
+
+### Path Costs (c_ij): extra cost of taking path j vs. baseline
+| Flight | Path 0 (optimal) | Path 1 (alternative) |
+|--------|------------------|----------------------|
+| 1      | 0.0              | 0.5                  |
+| 2      | 0.0              | 0.8                  |
+| 3      | 0.0              | 0.3                  |
+| 4      | 0.0              | 0.6                  |
+
+### Delay Cost Parameters
+- Delay cost threshold: **d = 300 seconds** (5 minutes)
+- Unit delay cost r_i ($/second) when delay ≤ d:
+
+| Flight | r_i ($/s) |
+|--------|-----------|
+| 1      | 0.004     |
+| 2      | 0.002     |
+| 3      | 0.005     |
+| 4      | 0.003     |
+
+- Unit delay cost R_i ($/second) when delay > d: R_i = 2 * r_i for all flights.
+
+### Spatial Conflict Pairs
+A conflict pair c = (i, j, m, n) means: if flight i takes path j AND flight m takes path n, they share a conflict region.
+
+| Conflict ID | Flight i | Path j | Flight m | Path n | b_c (i→entry, s) | e_c (i→exit, s) | B_c (m→entry, s) | E_c (m→exit, s) |
+|-------------|----------|--------|----------|--------|-------------------|-----------------|-------------------|-----------------|
+| C1          | 1        | 0      | 2        | 0      | 30                | 60              | 20                | 50              |
+| C2          | 1        | 0      | 3        | 0      | 50                | 80              | 40                | 70              |
+| C3          | 2        | 1      | 4        | 0      | 25                | 55              | 15                | 45              |
+| C4          | 3        | 1      | 4        | 1      | 35                | 65              | 30                | 60              |
+
+**Safety buffer**: t0 = 10 seconds (one UAV must exit the conflict region at least 10s before the other enters).
+
+**Big-M**: M = 10000 (a sufficiently large number).
+
+---
+
+## Decision
+
+For each flight i ∈ {1,2,3,4}:
+- Choose which path to take: I_{i,0} = 1 (optimal) or I_{i,1} = 1 (alternative).
+- Choose actual departure time t_i ≥ s_i.
+
+The manager minimizes total system cost = sum of delay costs + sum of path costs.

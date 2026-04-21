@@ -1,0 +1,92 @@
+### Step 1: Decision Variables Definition
+
+**Sets:**
+- $I$: Set of OTR (overdose-triggered request) locations
+- $J$: Set of candidate drone base locations
+- $I_j \subseteq I$: OTR locations within coverage radius of base $j$
+- $J_i \subseteq J$: Drone bases that can cover OTR location $i$
+
+**Parameters:**
+- $\lambda_i$: Arrival rate of OTRs at location $i$ (Poisson process)
+- $d_{ij}$: Distance between base $j$ and OTR location $i$
+- $v$: Drone flight speed
+- $E[\xi]$: Expected non-travel service time
+- $E[S_{ij}] = \frac{d_{ij}}{v} + E[\xi]$: Expected service time
+- $p$: Total number of drones available
+- $q$: Maximum number of drone bases to open
+- $M$: Maximum drones per base (= 2)
+- $r$: Drone coverage radius
+
+**Decision Variables:**
+- $x_j \in \{0, 1\}$: Binary, 1 if drone base is opened at location $j$
+- $y_{ij} \in \{0, 1\}$: Binary, 1 if OTR at location $i$ is assigned to base $j$
+- $K_j \in \{0, 1, \ldots, M\}$: **Integer variable** representing the number of drones deployed at base $j$ (replaces the original $\gamma_j^{(m)}$ binary decomposition)
+
+### Step 2: Objective Function Construction
+
+**Flight time component (weighted by arrival rate):**
+$$\text{FlightTime} = \frac{1}{\sum_{l \in I} \lambda_l} \sum_{i \in I} \sum_{j \in J_i} \frac{\lambda_i \cdot d_{ij} \cdot y_{ij}}{v}$$
+
+**Queueing delay approximation (utilization-based penalty):**
+$$\text{QueuePenalty} = \frac{0.5}{\sum_{l \in I} \lambda_l} \sum_{j \in J} ws_j$$
+
+where $ws_j = \sum_{i \in I_j} \lambda_i \cdot y_{ij} \cdot E[S_{ij}]$ is the weighted service load at base $j$.
+
+**Average Response Time (Objective):**
+$$\min\; \text{FlightTime} + \text{QueuePenalty}$$
+
+### Step 3: Constraint Construction
+
+**1. Assignment Constraint:**
+Each OTR location must be assigned to exactly one drone base:
+$$\sum_{j \in J_i} y_{ij} = 1, \quad \forall i \in I$$
+
+**2. Aggregated Capacity Linking (replaces individual $y_{ij} \le x_j$):**
+
+Instead of one constraint per (OTR, base) pair, we use a **single aggregate capacity constraint** per base. The total number of OTRs assigned to base $j$ cannot exceed $|I| \cdot x_j$:
+
+$$\sum_{i \in I_j} y_{ij} \le |I| \cdot x_j, \quad \forall j \in J$$
+
+When $x_j = 0$, this forces all $y_{ij} = 0$. When $x_j = 1$, all assignments are feasible.
+
+**3. Maximum Bases Constraint:**
+$$\sum_{j \in J} x_j \le q$$
+
+**4. Drone Deployment via Direct Integer Variable (replaces $\gamma$ decomposition):**
+
+The original model used binary variables $\gamma_j^{(m)}$ to represent "exactly $m$ drones at base $j$". We replace this with a **direct integer variable** $K_j$ with linking bounds:
+
+$$x_j \le K_j \le M \cdot x_j, \quad \forall j \in J$$
+
+When $x_j = 0$: $K_j = 0$. When $x_j = 1$: $K_j \in \{1, 2, \ldots, M\}$.
+
+**5. Total Drones Constraint:**
+$$\sum_{j \in J} K_j = p$$
+
+**6. Arrival Rate and Weighted Service (auxiliary):**
+$$\eta_j = \sum_{i \in I_j} \lambda_i \cdot y_{ij}, \quad \forall j \in J$$
+$$ws_j = \sum_{i \in I_j} \lambda_i \cdot y_{ij} \cdot E[S_{ij}], \quad \forall j \in J$$
+
+**7. Stability Constraint:**
+$$ws_j \le K_j - \epsilon, \quad \forall j \in J$$
+
+**8. Variable Domains:**
+$$x_j, y_{ij} \in \{0, 1\}, \quad K_j \in \{0, 1, \ldots, M\}$$
+
+### Summary of the Mathematical Model
+
+**Decision Variables:**
+- $x_j$: Base opening decisions (binary)
+- $y_{ij}$: OTR-to-base assignment decisions (binary)
+- $K_j$: Number of drones at each base (integer, $0 \le K_j \le M$)
+
+**Objective Function:**
+$$\min \frac{1}{\sum_l \lambda_l} \left[ \sum_{i,j} \frac{\lambda_i \cdot d_{ij} \cdot y_{ij}}{v} + 0.5 \sum_j ws_j \right]$$
+
+**Key Constraints:**
+1. Single assignment per OTR
+2. Aggregated capacity linking per base
+3. Maximum number of bases
+4. Direct integer drone deployment with linking bounds
+5. Total drone budget
+6. Queueing stability

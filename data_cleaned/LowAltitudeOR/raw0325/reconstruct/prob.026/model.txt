@@ -1,0 +1,182 @@
+### Step 1: Decision Variables Definition
+
+Let's define the decision variables for the problem.
+
+**Sets:**
+- $D$: Set of candidate Fulfillment Centers (FCs), indexed by $s$
+- $C$: Set of customers, indexed by $i, j$
+- $V = D \cup C$: Set of all nodes
+
+**Parameters:**
+- $\bar{t}_{ij}$: Nominal flight time on arc $(i, j)$
+- $\hat{t}_{ij}$: Uncertainty margin for flight time on arc $(i, j)$
+- $\rho$: Robustness parameter controlling the level of conservatism
+- $t^R_{ij} = \bar{t}_{ij} + \rho \cdot \hat{t}_{ij}$: Robust (worst-case) flight time
+- $d_i$: Parcel weight (demand) for customer $i$
+- $Q$: Drone payload capacity
+- $k$: Number of drones
+- $\phi$: Maximum drones per FC
+- $DS$: Maximum number of FCs to open
+- $n = |C|$: Number of customers
+- $U$: Upper bound on the maximum possible arrival time at any customer
+
+**Decision Variables:**
+
+- $z_s \in \{0, 1\}$: Binary variable equal to 1 if FC $s$ is opened; 0 otherwise.
+- $x_{ij} \in \{0, 1\}$: Binary variable equal to 1 if arc $(i,j)$ is used in some route; 0 otherwise.
+- $a_i \in \{1, \ldots, n\}$: Integer variable representing the position of customer $i$ in its route (for subtour elimination).
+- $w_i \geq 0$: Continuous variable representing the waiting time (latency) of customer $i$.
+- $load_{ij} \geq 0$: Continuous variable representing the cargo load on arc $(i,j)$.
+
+**Auxiliary Variables (Linearized Product for Wait Time Propagation):**
+
+- $\delta_{ij} \geq 0$ for $i \in C, j \in C, i \neq j$: Continuous auxiliary variable representing the linearized product $(w_i + t^R_{ij}) \cdot x_{ij}$, i.e., the time contribution of predecessor $i$ to customer $j$'s arrival time.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total latency (sum of all customers' waiting times):
+
+$$
+\min Z = \sum_{i \in C} w_i
+$$
+
+### Step 3: Constraint Construction
+
+**1. Customer Visit Constraints:**
+
+Each customer must be visited exactly once:
+
+$$
+\sum_{i \in V, i \neq j} x_{ij} = 1 \quad \forall j \in C
+$$
+
+**2. Flow Conservation:**
+
+$$
+\sum_{j \in V, j \neq i} x_{ji} = \sum_{j \in V, j \neq i} x_{ij} \quad \forall i \in C
+$$
+
+**3. Route Start/End:**
+
+$$
+\sum_{s \in D} \sum_{j \in C} x_{sj} = k, \quad \sum_{i \in C} \sum_{s \in D} x_{is} = k
+$$
+
+**4. FC Opening Constraints:**
+
+$$
+x_{sj} \leq z_s \quad \forall s \in D, j \in C
+$$
+$$
+x_{is} \leq z_s \quad \forall i \in C, s \in D
+$$
+
+**5. Maximum FCs and FC Capacity:**
+
+$$
+\sum_{s \in D} z_s \leq DS
+$$
+$$
+\sum_{j \in C} x_{sj} \leq \phi \quad \forall s \in D
+$$
+
+**6. MTZ Subtour Elimination:**
+
+$$
+a_j \geq a_i + 1 - n(1 - x_{ij}) \quad \forall i, j \in C, i \neq j
+$$
+
+**7. Position Reset from FC:**
+
+$$
+a_j \leq 1 + n(1 - x_{sj}) \quad \forall s \in D, j \in C
+$$
+
+**8. Linearized Product Constraints (Replacing Big-M Wait Time Propagation):**
+
+Instead of the Big-M inequality $w_j \geq w_i + t^R_{ij} - M(1 - x_{ij})$, we introduce auxiliary variables $\delta_{ij}$ that linearize the product $(w_i + t^R_{ij}) \cdot x_{ij}$ via McCormick envelope constraints.
+
+For each arc $(i,j)$ where $i \in C, j \in C, i \neq j$:
+
+$$
+\delta_{ij} \leq U \cdot x_{ij}
+$$
+$$
+\delta_{ij} \leq w_i + t^R_{ij}
+$$
+$$
+\delta_{ij} \geq (w_i + t^R_{ij}) - U \cdot (1 - x_{ij})
+$$
+$$
+\delta_{ij} \geq 0
+$$
+
+**9. Arrival Time Definition via Auxiliary Variables:**
+
+Since exactly one arc enters each customer $j$, the arrival time equals the time contribution from the unique active predecessor. For FC→customer arcs, the contribution is simply $t^R_{sj} \cdot x_{sj}$ (parameter × binary, already linear):
+
+$$
+w_j = \sum_{s \in D} t^R_{sj} \cdot x_{sj} + \sum_{i \in C, i \neq j} \delta_{ij} \quad \forall j \in C
+$$
+
+**10. No Inter-Depot Arcs:**
+
+$$
+x_{s_1 s_2} = 0 \quad \forall s_1, s_2 \in D, s_1 \neq s_2
+$$
+
+**11. Payload Capacity and Load Flow:**
+
+$$
+load_{sj} \leq Q \cdot x_{sj}, \quad load_{sj} \geq d_j \cdot x_{sj} \quad \forall s \in D, j \in C
+$$
+$$
+load_{ij} \leq Q \cdot x_{ij} \quad \forall i, j \in C, i \neq j
+$$
+$$
+load_{is} = 0 \quad \forall i \in C, s \in D
+$$
+$$
+\sum_{s \in D} load_{si} + \sum_{j \in C, j \neq i} load_{ji} - \sum_{j \in C, j \neq i} load_{ij} - \sum_{s \in D} load_{is} = d_i \quad \forall i \in C
+$$
+
+**12. Variable Domains:**
+
+$$
+z_s \in \{0, 1\}, \quad x_{ij} \in \{0, 1\}, \quad a_i \in \{1, \ldots, n\}, \quad w_i \geq 0, \quad \delta_{ij} \geq 0, \quad load_{ij} \geq 0
+$$
+
+### Summary of the Mathematical Model
+
+**Decision Variables:**
+- $z_s \in \{0, 1\}$: FC opening decisions
+- $x_{ij} \in \{0, 1\}$: Arc selection
+- $a_i$: Customer position (MTZ subtour elimination)
+- $w_i \geq 0$: Customer waiting time (latency)
+- $load_{ij} \geq 0$: Arc cargo load
+
+**Auxiliary Variables:**
+- $\delta_{ij} \geq 0$: Linearized product $(w_i + t^R_{ij}) \cdot x_{ij}$ for customer-to-customer arcs
+
+**Objective Function:**
+
+$$
+\min Z = \sum_{i \in C} w_i
+$$
+
+**Constraints:**
+1. Customer visit (in-degree = 1)
+2. Flow conservation
+3. Route start/end balance
+4. FC opening logic
+5. Max FCs and FC capacity
+6. MTZ subtour elimination
+7. Position reset from FC
+8. Linearized product (McCormick): $\delta_{ij} \leq U x_{ij}$, $\delta_{ij} \leq w_i + t^R_{ij}$, $\delta_{ij} \geq (w_i + t^R_{ij}) - U(1 - x_{ij})$
+9. Arrival time definition: $w_j = \sum_s t^R_{sj} x_{sj} + \sum_i \delta_{ij}$
+10. No inter-depot arcs
+11. Payload capacity and load flow
+12. Variable domains
+
+1. Optimization Problem Classification: MINLP
+2. Problem Scale: Small

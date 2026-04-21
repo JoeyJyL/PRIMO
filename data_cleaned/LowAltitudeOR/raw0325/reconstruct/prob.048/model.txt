@@ -1,0 +1,80 @@
+## Sets and Indices
+
+- $K = \{1, 3, 4, 5\}$: candidate vertiport zones
+- $W = \{1\}$: warehouses
+- $C = \{1, 2, 3, 4, 5, 6\}$: customer demand zones
+- $T$: vertiport types (small, medium, large)
+- $T_k \subseteq T$: available vertiport types for zone $k$ (based on infrastructure)
+
+## Parameters
+
+- $w_c$: demand weight (packages) of customer zone $c$
+- $S_k$: safety score of zone $k$ (higher = worse)
+- $N_k$: noise score of zone $k$ (higher = worse)
+- $\Gamma_t$: capacity (packages/day) of vertiport type $t$
+- $v_{wck} \in \{0,1\}$: 1 if warehouse $w$ can reach customer $c$ via vertiport $k$ (within drone range $f_p = 30$ km and last-mile distance $f_d = 10$ km)
+- $d_{\min} = 2$ km, $d_{\max} = 10$ km: safety distance bounds
+- $p = 3$: number of vertiports to select
+
+## Decision Variables
+
+- $x_{kt} \in \{0, 1\}$: 1 if vertiport of type $t$ is placed in zone $k$
+- $y_c \in \{0, 1\}$: 1 if customer zone $c$ is covered
+- $z_{ck} \in \{0, 1\}$: 1 if customer $c$ is exclusively assigned to vertiport $k$
+
+## Objective
+
+Weighted-sum multi-objective (minimize):
+
+$$\min \; 1000 \sum_{c \in C} w_c (1 - y_c) + 10 \sum_{k \in K} \sum_{t \in T_k} S_k \cdot x_{kt} + 10 \sum_{k \in K} \sum_{t \in T_k} N_k \cdot x_{kt}$$
+
+## Constraints
+
+### (C1) Vertiport Budget
+
+$$\sum_{k \in K} \sum_{t \in T_k} x_{kt} = p$$
+
+### (C2) Single Type per Zone
+
+$$\sum_{t \in T_k} x_{kt} \le 1, \quad \forall k \in K$$
+
+### (C3) Coverage Definition
+
+$$y_c \le \sum_{k \in K} \sum_{t \in T_k} x_{kt} \cdot v_{wck}, \quad \forall c \in C, w \in W$$
+
+### (C4) Exclusive Assignment — Binary Assignment Formulation
+
+The original formulation uses continuous fractional allocation variables $r_{wck} \in [0,1]$ to route demand fractions through vertiports, with the constraint $\sum_k r_{wck} = y_c$ and capacity limits on fractional demand. This allows demand splitting across multiple vertiports.
+
+This is replaced by **binary exclusive assignment**: each covered customer is assigned to exactly one vertiport via binary variable $z_{ck} \in \{0,1\}$.
+
+$$z_{ck} \le \sum_{t \in T_k} x_{kt} \cdot v_{wck}, \quad \forall c \in C, k \in K, w \in W$$
+
+### (C5) Coverage Requirement — Exclusive Assignment
+
+$$\sum_{k \in K} z_{ck} = y_c, \quad \forall c \in C$$
+
+Each covered customer is assigned to exactly one vertiport (no demand splitting).
+
+### (C6) Capacity Constraint — Binary Assignment
+
+$$\sum_{c \in C} w_c \cdot z_{ck} \le \sum_{t \in T_k} \Gamma_t \cdot x_{kt}, \quad \forall k \in K$$
+
+Total demand assigned to vertiport $k$ cannot exceed its type-dependent capacity.
+
+### (C7) Minimum Safety Distance
+
+$$x_{k_1 t_1} + x_{k_2 t_2} \le 1, \quad \forall k_1, k_2: k_1 \ne k_2, \; dist(k_1, k_2) < d_{\min}, \; \forall t_1 \in T_{k_1}, t_2 \in T_{k_2}$$
+
+### (C8) Maximum Safety Distance
+
+$$\sum_{\substack{k' \in K: k' \ne k \\ dist(k,k') \le d_{\max}}} \sum_{t' \in T_{k'}} x_{k't'} \ge \sum_{t \in T_k} x_{kt}, \quad \forall k \in K$$
+
+## Key Modeling Difference
+
+The original formulation uses **continuous fractional allocation variables** $r_{wck} \in [0,1]$ to represent demand fractions routed through each vertiport, allowing packages from a single customer zone to be split across multiple vertiports. The LP relaxation is tighter but allows fractional demand routing.
+
+This reformulation uses **binary exclusive assignment variables** $z_{ck} \in \{0,1\}$, which forces each customer zone to be assigned to exactly one vertiport (whole-demand assignment). This eliminates fractional demand splitting and simplifies the allocation constraints from continuous to purely binary, making the model a pure MILP without continuous allocation variables.
+
+1. Optimization Problem Classification: MILP
+2. Problem Size: Small

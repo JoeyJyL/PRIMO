@@ -1,0 +1,178 @@
+### Step 1: Decision Variables Definition
+
+Let’s define the decision variables for the problem.
+
+Let’s denote:
+
+- $ y_m $: a binary variable indicating if Micro-Depot (MD) $ m $ is opened.
+- $ z_{im} $: a binary variable indicating if customer $ i $ is served by a drone from MD $ m $.
+- $ v_i $: a binary variable indicating if customer $ i $ is served directly by the truck.
+- $ x_{ij} $: a binary variable indicating if the truck travels from node $ i $ to node $ j $.
+- $ u_i $: a continuous variable representing the cumulative position or load in the truck tour for Subtour Elimination (MTZ).
+
+Thus, we have:
+
+- $ y_m \in \{0, 1\} $ for all $ m \in M $.
+- $ z_{im} \in \{0, 1\} $ for all $ i \in C, m \in M $.
+- $ v_i \in \{0, 1\} $ for all $ i \in C $.
+- $ x_{ij} \in \{0, 1\} $ for all $ i, j \in N $.
+- $ u_i \ge 0 $ for all $ i \in N $.
+
+### Step 2: Objective Function Construction
+
+The goal is to minimize the total cost, which consists of the fixed costs for opening Micro-Depots, the drone delivery costs, and the truck transportation costs.
+
+The objective function is:
+
+$$
+\min \sum_{m \in M} F_m y_m + \sum_{i \in C} \sum_{m \in M} c_{im}^{drone} z_{im} + \sum_{i \in N} \sum_{j \in N} c_{ij}^{truck} x_{ij}
+$$
+
+Where:
+
+- $ F_m $ is the fixed cost to open MD $ m $.
+- $ c_{im}^{drone} $ is the drone round-trip cost from MD $ m $ to customer $ i $.
+- $ c_{ij}^{truck} $ is the truck travel cost from node $ i $ to node $ j $.
+
+### Step 3: Constraint Construction
+
+Now, let’s identify and translate the constraints into mathematical expressions.
+
+1. **Service Assignment Constraint:**
+
+Each customer must be served exactly once, either by a drone from an open MD or directly by the truck.
+
+For each customer $ i \in C $:
+
+$$
+\sum_{m \in M} z_{im} + v_i = 1
+$$
+
+2. **MD Availability and Range Constraint:**
+
+A customer can only be assigned to an MD if that MD is open and within the drone's range $ R_{max} $.
+
+For each customer $ i \in C $ and MD $ m \in M $:
+
+$$
+z_{im} \le y_m
+$$
+
+Additionally, if the distance is beyond range (preprocessing step):
+
+$$
+z_{im} = 0 \quad \text{if } dist(i, m) > R_{max}
+$$
+
+3. **Truck Flow Conservation:**
+
+The truck flow must be conserved at every node. If a node is active (CDC, open MD, or truck-served customer), the truck must enter and leave it exactly once.
+
+For the CDC (node 0):
+
+$$
+\sum_{j \in N} x_{0j} = 1, \quad \sum_{j \in N} x_{j0} = 1
+$$
+
+For each MD $ m \in M $:
+
+$$
+\sum_{j \in N} x_{mj} = \sum_{j \in N} x_{jm} = y_m
+$$
+
+For each customer $ i \in C $:
+
+$$
+\sum_{j \in N} x_{ij} = \sum_{j \in N} x_{ji} = v_i
+$$
+
+4. **Subtour Elimination (MTZ):**
+
+To prevent subtours in the truck route, we apply Miller-Tucker-Zemlin constraints.
+
+For all $ i, j \in N \setminus \{CDC\} $:
+
+$$
+u_i - u_j + |N| \cdot x_{ij} \le |N| - 1
+$$
+
+5. **Binary and Non-negativity Constraints:**
+
+$$
+y_m, z_{im}, v_i, x_{ij} \in \{0, 1\}, \quad u_i \ge 0
+$$
+
+### Summary of the Mathematical Model
+
+The mathematical model for the problem is as follows:
+
+**Decision Variables:**
+
+- $ y_m \in \{0, 1\} $ for all $ m \in M $.
+- $ z_{im} \in \{0, 1\} $ for all $ i \in C, m \in M $.
+- $ v_i \in \{0, 1\} $ for all $ i \in C $.
+- $ x_{ij} \in \{0, 1\} $ for all $ i, j \in N $.
+- $ u_i \ge 0 $ for all $ i \in N $.
+
+**Objective Function:**
+
+Minimize:
+
+$$
+\min \sum_{m \in M} F_m y_m + \sum_{i \in C} \sum_{m \in M} c_{im}^{drone} z_{im} + \sum_{i \in N} \sum_{j \in N} c_{ij}^{truck} x_{ij}
+$$
+
+**Constraints:**
+
+1. **Service Assignment:**
+
+For each $ i \in C $:
+
+$$
+\sum_{m \in M} z_{im} + v_i = 1
+$$
+
+2. **MD Availability:**
+
+For each $ i \in C, m \in M $:
+
+$$
+z_{im} \le y_m
+$$
+
+3. **Truck Flow Conservation:**
+
+For CDC:
+
+$$
+\sum_{j \in N} x_{0j} = 1
+$$
+
+For each $ m \in M $:
+
+$$
+\sum_{j \in N} x_{mj} = y_m
+$$
+
+For each $ i \in C $:
+
+$$
+\sum_{j \in N} x_{ij} = v_i
+$$
+
+4. **Subtour Elimination:**
+
+For $ i, j \in N \setminus \{CDC\} $:
+
+$$
+u_i - u_j + |N| x_{ij} \le |N| - 1
+$$
+
+5. **Binary Constraints:**
+
+$$
+y_m, z_{im}, v_i, x_{ij} \in \{0, 1\}
+$$
+
+1. Optimization Problem Classification: MILP
+2. Problem Scale: Medium

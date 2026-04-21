@@ -1,0 +1,7 @@
+{
+    "status": "optimal",
+    "obj": 1030.0,
+    "open_vertiports": [1, 2, 3],
+    "active_rs_routes": ["A", "B"],
+    "covered_odm_zones": ["Z1", "Z2", "Z3"]
+}

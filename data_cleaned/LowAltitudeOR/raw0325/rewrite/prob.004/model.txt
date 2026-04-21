@@ -1,0 +1,152 @@
+### Step 1: Decision Variables Definition
+
+Let’s define the decision variables for the problem.
+
+Let’s denote:
+
+- [cite_start]$ x_{ij} $: a binary variable indicating if a UAV travels from node $ i $ to node $ j $[cite: 6].
+- [cite_start]$ y_k $: a binary variable indicating if Forwarding Assistant Station (FAS) $ k $ is open[cite: 5].
+- [cite_start]$ u_i $: a continuous variable representing the cumulative distance or energy consumed upon arriving at node $ i $[cite: 7].
+
+Thus, we have:
+
+- [cite_start]$ x_{ij} \in \{0, 1\} $ for all valid arcs $ (i,j) \in A $[cite: 3, 6].
+- [cite_start]$ y_k \in \{0, 1\} $ for all candidate locations $ k \in S $[cite: 2, 5].
+- [cite_start]$ u_i \ge 0 $ for all nodes $ i \in N $[cite: 1, 7].
+
+### Step 2: Objective Function Construction
+
+[cite_start]The goal is to minimize the total cost, which consists of the fixed costs for opening FAS locations and the travel costs associated with the distance traveled by the UAVs[cite: 8].
+
+The objective function is:
+
+$$
+\min \sum_{k \in S} f_k y_k + \sum_{(i,j) \in A} c_{ij} x_{ij}
+$$
+
+Where:
+
+- [cite_start]$ f_k $ is the fixed cost of opening FAS $ k $[cite: 3].
+- [cite_start]$ c_{ij} $ is the travel cost (distance) from node $ i $ to node $ j $[cite: 4].
+- [cite_start]$ S $ is the set of candidate FAS locations and $ A $ is the set of valid arcs[cite: 2, 3].
+
+### Step 3: Constraint Construction
+
+Now, let’s identify and translate the constraints into mathematical expressions.
+
+1. **Target Coverage Constraint:**
+
+Each target node $ j $ must be visited exactly once. [cite_start]This implies both the in-degree and out-degree for target nodes must be exactly 1[cite: 9].
+
+For each target $ j \in T $:
+
+$$
+\sum_{i \in N} x_{ij} = 1
+$$
+
+For each target $ i \in T $:
+
+$$
+\sum_{j \in N} x_{ji} = 1
+$$
+
+2. **FAS Logic and Flow Constraints:**
+
+If a route starts or ends at a candidate location $ k $, that FAS must be opened ($ y_k = 1 $). [cite_start]We use a large number $ M $ to enforce this logic[cite: 5, 12].
+
+For each candidate FAS $ k \in S $:
+
+$$
+\sum_{j \in N} x_{kj} \le M y_k
+$$
+
+$$
+\sum_{i \in N} x_{ik} \le M y_k
+$$
+
+3. **Battery Range Constraint (MTZ-like):**
+
+[cite_start]The cumulative energy/distance $ u_j $ at node $ j $ must account for the previous node's accumulation plus the travel cost, ensuring it does not exceed the maximum battery range $ L $[cite: 4, 13].
+
+For valid arcs $ (i,j) $:
+
+$$
+u_j \ge u_i + c_{ij} - M(1 - x_{ij})
+$$
+
+$$
+u_j \le L
+$$
+
+4. **Binary and Non-negativity Constraints:**
+
+[cite_start]The decision variables must adhere to their respective domains[cite: 5, 6, 7].
+
+$$
+x_{ij} \in \{0, 1\}, \quad y_k \in \{0, 1\}, \quad u_i \ge 0
+$$
+
+### Summary of the Mathematical Model
+
+The mathematical model for the problem is as follows:
+
+**Decision Variables:**
+
+- $ x_{ij} \in \{0, 1\} $ for all $ (i,j) \in A $.
+- $ y_k \in \{0, 1\} $ for all $ k \in S $.
+- $ u_i \ge 0 $ for all $ i \in N $.
+
+**Objective Function:**
+
+Minimize:
+
+$$
+\min \sum_{k \in S} f_k y_k + \sum_{(i,j) \in A} c_{ij} x_{ij}
+$$
+
+**Constraints:**
+
+1. **Target Coverage Constraint:**
+
+For each target $ j \in T $:
+
+$$
+\sum_{i \in N} x_{ij} = 1
+$$
+
+For each target $ i \in T $:
+
+$$
+\sum_{j \in N} x_{ji} = 1
+$$
+
+2. **FAS Logic Constraint:**
+
+For each candidate FAS $ k \in S $:
+
+$$
+\sum_{j \in N} x_{kj} \le M y_k
+$$
+$$
+\sum_{i \in N} x_{ik} \le M y_k
+$$
+
+3. **Battery Range Constraint:**
+
+For valid arcs:
+
+$$
+u_j \ge u_i + c_{ij} - M(1 - x_{ij})
+$$
+$$
+u_j \le L
+$$
+
+4. **Binary and Non-negativity Constraints:**
+
+$$
+x_{ij} \in \{0, 1\}, \quad y_k \in \{0, 1\}, \quad u_i \ge 0
+$$
+
+1. Optimization Problem Classification: MILP
+2. Problem Scale: Medium

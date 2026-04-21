@@ -1,0 +1,99 @@
+### Step 1: Decision Variables Definition
+
+Let’s define the decision variables for the problem.
+
+Let’s denote:
+
+- $ y_i $: a binary variable indicating if vertiport $ i $ is opened.
+- $ z_k $: a binary variable indicating if OD route $ k $ (pair $ (i, j) $) is active.
+
+Thus, we have:
+
+- $ y_i \in \{0, 1\} $ for all $ i \in N $.
+- $ z_k \in \{0, 1\} $ for all $ k \in K $.
+
+### Step 2: Objective Function Construction
+
+The goal is to maximize the robust net profit, which is the revenue from active routes (considering demand uncertainty) minus the fixed costs of opening vertiports.
+
+The objective function is:
+
+$$
+\text{Maximize } Z = \sum_{k \in K} z_k \cdot (D_k^{nom} - \hat{D}_k) \cdot P_k^{air} \cdot Margin_k^{air} - \sum_{i \in N} F_i y_i
+$$
+
+Where:
+
+- $ D_k^{nom} $ is the nominal daily demand for route $ k $.
+- $ \hat{D}_k $ is the demand uncertainty margin for route $ k $.
+- $ P_k^{air} $ is the probability of choosing Air Taxi for route $ k $.
+- $ Margin_k^{air} $ is the net revenue per air passenger for route $ k $.
+- $ F_i $ is the fixed cost of opening vertiport $ i $.
+- $ N $ is the set of candidate vertiports and $ K $ is the set of potential OD routes.
+
+### Step 3: Constraint Construction
+
+Now, let’s identify and translate the constraints into mathematical expressions.
+
+1. **Route Activation Logic:**
+
+A route $ k = (i, j) $ can be active only if both its origin vertiport $ i $ and destination vertiport $ j $ are opened.
+
+For each route $ k = (i, j) \in K $:
+
+$$
+z_k \le y_i
+$$
+
+$$
+z_k \le y_j
+$$
+
+2. **Binary Constraints:**
+
+The decision variables must be binary.
+
+For all $ i \in N $ and $ k \in K $:
+
+$$
+y_i \in \{0, 1\}, \quad z_k \in \{0, 1\}
+$$
+
+### Summary of the Mathematical Model
+
+The mathematical model for the problem is as follows:
+
+**Decision Variables:**
+
+- $ y_i \in \{0, 1\} $ for all $ i \in N $.
+- $ z_k \in \{0, 1\} $ for all $ k \in K $.
+
+**Objective Function:**
+
+Maximize:
+
+$$
+Z = \sum_{k \in K} z_k \cdot (D_k^{nom} - \hat{D}_k) \cdot P_k^{air} \cdot Margin_k^{air} - \sum_{i \in N} F_i y_i
+$$
+
+**Constraints:**
+
+1. **Route Activation Logic:**
+
+For each route $ k = (i, j) \in K $:
+
+$$
+z_k \le y_i
+$$
+$$
+z_k \le y_j
+$$
+
+2. **Binary Constraints:**
+
+$$
+y_i \in \{0, 1\}, \quad z_k \in \{0, 1\}
+$$
+
+1. Optimization Problem Classification: ILP
+2. Problem Scale: Medium

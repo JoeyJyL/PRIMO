@@ -1,0 +1,30 @@
+
+"SkyMetro" is designing a regional UAM network with a focus on infrastructure cost management.
+**Network Topology:**
+- **V1 (City Hub):** High land cost ($100/space). Central business district.
+- **V2 (North Suburb):** Low land cost ($20/space). Residential.
+- **V3 (South Suburb):** Low land cost ($20/space). Residential.
+
+**Demand Scenarios (Trips/hr):**
+- **T1 (AM Peak):** Massive inflow to City.
+  - V2 $\to$ V1: 30
+  - V3 $\to$ V1: 20
+- **T2 (Mid-Day):** Balanced light traffic.
+  - V1 $\leftrightarrow$ V2: 10 each way.
+  - V1 $\leftrightarrow$ V3: 10 each way.
+- **T3 (PM Peak):** Massive outflow from City.
+  - V1 $\to$ V2: 30
+  - V1 $\to$ V3: 20
+
+**Operational Parameters:**
+- **Flight Time:** 0.5 hrs per trip (uniform).
+- **Charging Time:** 0.3 hrs per trip (Fast charging).
+- **Minimum Idle:** 1 drone per vertiport at all times.
+- **Costs:**
+  - Fleet CapEx: $500 per drone.
+  - Relocation OpEx: $5 per empty flight.
+  - Vertiport Space CapEx: Varies by location (see above).
+
+**Planning Problem:**
+Determine the optimal **Fleet Size** and **Number of Parking Spaces** at each vertiport to handle the peak loads across all time windows, while minimizing Total Cost (Investment + Operations).
+- *Note:* Since V1 is expensive, the solver might try to minimize V1's size, but the physics of "Steady State" flow (Arrivals = Departures) imposes strict constraints.
