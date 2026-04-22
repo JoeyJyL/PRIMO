@@ -51,14 +51,6 @@ reward channels. Key env vars: `VERL_TRAIN_RM_WEIGHT` (PRM weight, default `0.1`
 > Note: `reward_function.py` expects a `test_prm_api` module that queries your
 > Process Reward Model; plug in your own endpoint before training.
 
-## Citation
-
-```bibtex
-@article{primo2026,
-  title  = {PRIMO: Process-rewarded Reasoning LLM for Optimization},
-  author = {Anonymous},
-  year   = {2026}
-}
 ```
 
 Built on [VERL](https://github.com/volcengine/verl) and
