@@ -25,6 +25,9 @@ release/
 **Benchmarks:** ComplexOR, IndustryOR, LogiOR, Mamo (easy / complex), NL4Opt,
 NLP4LP, OptiBench — as both `*.json` and `train/test/all.parquet` splits.
 
+## Model
+Model can be downloaded at: https://huggingface.co/lyvekerr/PRIMO
+
 ## Quick start
 
 ```bash
@@ -55,3 +58,4 @@ reward channels. Key env vars: `VERL_TRAIN_RM_WEIGHT` (PRM weight, default `0.1`
 
 Built on [VERL](https://github.com/volcengine/verl) and
 [vLLM](https://github.com/vllm-project/vllm).
+
