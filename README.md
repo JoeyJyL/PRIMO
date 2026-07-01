@@ -13,6 +13,7 @@ Gurobi program. It is trained in three stages, shown above:
 
 **Benchmarks:** IndustryOR, LogiOR, Mamo (easy / complex), NL4Opt,
 NLP4LP, OptiBench — as both `*.json` and `train/test/all.parquet` splits.
+added ComplexOR as OOD testing
 
 ## Model
 Model can be downloaded at: https://huggingface.co/lyvekerr/PRIMO
